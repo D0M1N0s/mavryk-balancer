@@ -36,6 +36,7 @@ function rebalance_weights   (var reserve_token_i : nat;
         var fraction_root : nat := pow_float(fraction, power);
         var sub_res : nat := sub_floats(1n * precision, fraction_root * precision);
         var delta_token_o : nat := mul_floats(reserve_token_o * precision, sub_res);
+        // todo: to think of calculations optimisation to reduce rounding error
     } with delta_token_o
 
 function swap_tokens(const store : finance_storage) : entrypoint is 
@@ -45,7 +46,7 @@ function swap_tokens(const store : finance_storage) : entrypoint is
     var reserve_i : nat := get_value_from_opt(store.reserve[token_i], "No such token in liquidity pool");
     var reserve_o : nat := get_value_from_opt(store.reserve[token_o], "No such token in liquidity pool");
 
-    var delta_token_o : nat := rebalance_weights(reserve_i, reserve_o, store.amount, 50n * 100_000n, 50n * 10_000n);
+    var delta_token_o : nat := rebalance_weights(reserve_i, reserve_o, store.amount, 50n * 100_000n, 50n * 100_000n);
     // todo: transactions + storage changing logic
   } with ((nil : list(operation)), store)
 

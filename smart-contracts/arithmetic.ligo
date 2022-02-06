@@ -23,10 +23,16 @@ function div_floats(var a : nat; var b : nat) : nat is
         var res : nat := up /  b;
     } with res
 
-function multiplyer(var a : nat; var b : nat) : nat is 
-    if b = 0n then 1n else a
 
 recursive function pow_float(var a : nat; var power : nat) : nat is
     block {
-        skip;
-    } with (failwith ("Not implemented yet") : nat)
+        // to check that it works correctly with "float" numbers ("float" = nat / precision)
+        var res : nat := 1n;
+        var powered_a : nat := a;
+        while power > 0n block {
+            if power mod 2n = 1n then res := res * powered_a;
+            else skip;
+            powered_a := powered_a * powered_a;
+            power := power / 2n;
+        }
+    } with res
