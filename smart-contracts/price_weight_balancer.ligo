@@ -1,3 +1,5 @@
+#include "arithmetic.ligo"
+
 type user is record [
   user_wallet: big_map(string, nat);
   user_id : nat;
@@ -21,16 +23,19 @@ function get_value_from_opt(const data : option(nat); const error : string) : na
     | None -> (failwith (error) : nat)
   end
 
+// All float numbers are represented as nat / precision 
+// Since there no real floats in ligo it is necessary to mul numbers with precision
 function rebalance_weights   (var reserve_token_i : nat; 
                               var reserve_token_o : nat;
                               var delta_token_i : nat;
                               var weight_i : nat;
                               var weight_o : nat) : nat is
     block {
-        var delta_token_o : nat := reserve_token_o * delta_token_i / (delta_token_i + reserve_token_i); 
-        // todo: 
-        // - to change rebalancing function (it should support different weights)
-        // - to understand how to use floats, while there no of then in ligo
+        var fraction : nat := div_floats(reserve_token_i * precision, (reserve_token_i + delta_token_i) * precision);
+        var power : nat := div_floats(weight_i * precision, weight_o * precision);
+        var fraction_root : nat := pow_float(fraction, power);
+        var sub_res : nat := sub_floats(1n * precision, fraction_root * precision);
+        var delta_token_o : nat := mul_floats(reserve_token_o * precision, sub_res);
     } with delta_token_o
 
 function swap_tokens(const store : finance_storage) : entrypoint is 
