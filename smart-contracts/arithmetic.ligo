@@ -23,8 +23,8 @@ function div_floats(var a : nat; var b : nat) : nat is
         var res : nat := up /  b;
     } with res
 
-
-recursive function pow_float(var a : nat; var power : nat) : nat is
+// UNDONE!!!
+function pow_floats(var a : nat; var power : nat) : nat is
     block {
         // to check that it works correctly with "float" numbers ("float" = nat / precision)
         var res : nat := 1n;
@@ -35,4 +35,5 @@ recursive function pow_float(var a : nat; var power : nat) : nat is
             powered_a := powered_a * powered_a;
             power := power / 2n;
         }
+        // no float in result, need to normalize it and to represent as nat / precision
     } with res

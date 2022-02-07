@@ -33,7 +33,7 @@ function rebalance_weights   (var reserve_token_i : nat;
     block {
         var fraction : nat := div_floats(reserve_token_i * precision, (reserve_token_i + delta_token_i) * precision);
         var power : nat := div_floats(weight_i * precision, weight_o * precision);
-        var fraction_root : nat := pow_float(fraction, power);
+        var fraction_root : nat := pow_floats(fraction, power);
         var sub_res : nat := sub_floats(1n * precision, fraction_root * precision);
         var delta_token_o : nat := mul_floats(reserve_token_o * precision, sub_res);
         // todo: to think of calculations optimisation to reduce rounding error
