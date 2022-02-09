@@ -7,7 +7,8 @@ function add_floats(var a : nat; var b : nat) : nat is
 
 function sub_floats(var a : nat; var b : nat) : nat is
     block {
-        if a < b then failwith("Negative number couldn't be represented in nat")
+        if a < b 
+            then failwith("Negative number couldn't be represented in nat")
         else skip;
         var sub : nat := abs(a - b);
     } with sub
@@ -27,31 +28,35 @@ function div_floats(var a : nat; var b : nat) : nat is
 
 // powers the float into nat power
 function pow_float_into_nat(var a : nat; var power : nat) : nat is
-    block {var res : nat := 1n;
+    block {
+        var res : nat := precision;
         var powered_a : nat := a;
         while power > 0n block {
-            if power mod 2n = 1n then res := res * powered_a;
+            if power mod 2n = 1n 
+                then res := mul_floats(res, powered_a);
             else skip;
             powered_a := mul_floats(powered_a, powered_a);
             power := power / 2n;
         }
     } with res
 
-// gets the nat power from float
+// gets the nat power from float: a ^ (1 / root_pow)
 function root_float(var a : nat; var root_pow : nat) : nat is
     block {
-        var root : nat := a;
+        var root : nat := 1n * precision;
         var powered : nat := pow_float_into_nat(root, sub_floats(root_pow, 1n));
-        while abs (mul_floats(root, powered) - a) > precision block {
-            var value : nat := sub_floats(root_pow, 1n) * root + div_floats(a, powered);
-            root := div_floats(value, root_pow); 
+        var value : nat := 1n;
+        for i := 1 to 20 block {   //  absolutely not shure about end constant, need to fix it
+            value := mul_floats(sub_floats(root_pow, 1n) * precision, root) + div_floats(a, powered);
+            root := div_floats(value, root_pow * precision); 
             powered := pow_float_into_nat(root, sub_floats(root_pow, 1n));
         }
     } with root
 
+// a ^ (power / presision) = a ^ (power // presision) * a ^ (power % precision) / precision
 function pow_floats(var a : nat; var power : nat) : nat is
-    // to check that it works correctly with "float" numbers ("float" = nat / precision)
     block {
-        var res : nat := pow_float_into_nat(a, power);
-        res := root_float(res, precision);
+        var mul1 : nat := pow_float_into_nat(a, power / precision);
+        var mul2 : nat := root_float(pow_float_into_nat(a, power mod precision), precision);
+        var res : nat := mul_floats(mul1, mul2);
     } with res
