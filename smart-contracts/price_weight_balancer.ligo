@@ -1,14 +1,14 @@
 #include "arithmetic.ligo"
 
 type user is record [
-  user_wallet: big_map(string, nat);
-  user_address : address;
+    user_wallet: big_map(string, nat);
+    user_address : nat;
 ]
 type swap_t is record [
     transfered_coin : string;
     received_coin : string;
     amount : tez;
-    reciever : address;
+    reciever : nat;
 ]
 type storage_t is record [
     trader : user;
@@ -31,21 +31,21 @@ function get_opt(const data : option(nat)) : nat is
         | None -> 0n
     end
 
-// All float numbers are represented as nat / precision 
-// Since there no real floats in ligo it is necessary to mul numbers with precision
+// All float numbers are represented as nat / c_PRECISION 
+// Since there no real floats in ligo it is necessary to mul numbers with c_PRECISION
 function rebalance_weights   (var reserve_token_i : nat; 
                               var reserve_token_o : nat;
                               var delta_token_i : nat;
                               var weight_i : nat;
                               var weight_o : nat) : nat is
     block {
-        var fraction : nat := div_floats(reserve_token_i * precision, (reserve_token_i + delta_token_i) * precision);
-        var power : nat := div_floats(weight_i * precision, weight_o * precision);
+        var fraction : nat := div_floats(reserve_token_i * c_PRECISION, (reserve_token_i + delta_token_i) * c_PRECISION);
+        var power : nat := div_floats(weight_i, weight_o);
         var fraction_root : nat := pow_floats(fraction, power);
-        var sub_res : nat := sub_floats(1n * precision, fraction_root * precision);
-        var delta_token_o : nat := mul_floats(reserve_token_o * precision, sub_res);
+        var sub_res : nat := sub_floats(1n * c_PRECISION, fraction_root);
+        var delta_token_o : nat := mul_floats(reserve_token_o * c_PRECISION, sub_res) / c_PRECISION;
         // todo: to think of calculations optimisation to reduce rounding error
-    } with delta_token_o
+    } with delta_token_o;
 
 function swap_tokens(var store : storage_t) : entrypoint is 
   block {
@@ -62,7 +62,7 @@ function swap_tokens(var store : storage_t) : entrypoint is
         failwith ("Insufficient funds");
     else skip;
     var delta_token_o : nat := rebalance_weights(reserve_i, reserve_o, store.inp_token_amount, 50n * 100_000n, 50n * 100_000n);
-    // todo: transactions + storage changing logic
+    
     store.swaps[store.swps_size] := record [
         amount = Tezos.amount;
         reciever = store.trader.user_address;
@@ -76,7 +76,6 @@ function swap_tokens(var store : storage_t) : entrypoint is
     store.trader.user_wallet[token_o] := trader_out_reserve + delta_token_o;
     store.reserve[token_i] := get_opt(store.reserve[token_i]) + store.inp_token_amount;
     store.reserve[token_o] := abs(get_opt(store.reserve[token_o]) - delta_token_o);
-
   } with ((nil : list(operation)), store)
 
 function main (const action : action_t; const store : storage_t): entrypoint is
