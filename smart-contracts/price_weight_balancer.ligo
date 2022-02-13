@@ -57,11 +57,14 @@ function swap_tokens(var store : storage_t) : entrypoint is
     var reserve_o : nat := get_opt(store.reserve[token_o]);
     if reserve_o = 0n then failwith("No such token in liquidity pool");
     else skip;
-
     if get_opt(store.trader.user_wallet[token_i]) < store.inp_token_amount then 
         failwith ("Insufficient funds");
     else skip;
-    var delta_token_o : nat := rebalance_weights(reserve_i, reserve_o, store.inp_token_amount, 50n * 100_000n, 50n * 100_000n);
+
+    var weight_o : nat := get_opt(store.weight[token_o]);
+    var weight_i : nat := get_opt(store.weight[token_i]);
+    var delta_token_o : nat := 
+        rebalance_weights(reserve_i, reserve_o, store.inp_token_amount, weight_i, weight_o);
     
     store.swaps[store.swps_size] := record [
         amount = Tezos.amount;

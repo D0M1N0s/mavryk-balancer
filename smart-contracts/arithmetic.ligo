@@ -1,4 +1,4 @@
-const c_PRECISION : nat = 1000_000_000n;
+const c_PRECISION : nat = 10_000_000_000n;
 
 function mul(var a : int; var b : int) : int is 
     block {

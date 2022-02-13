@@ -5,7 +5,7 @@ from pytezos import ContractInterface, MichelsonRuntimeError
 MAX_HEAVY_ITER = 10
 MAX_LIGHT_ITER = 100
 MAX_NUM = 10 ** 9
-PRECISION = 10 ** 9
+PRECISION = 10 ** 10
 TARGET = './build/arithmetic.tz'
 
 def test_sum():

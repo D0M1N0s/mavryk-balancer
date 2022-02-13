@@ -3,7 +3,7 @@ from random import randint
 from pytezos import pytezos, ContractInterface, MichelsonRuntimeError
 
 TARGET = './build/amm.tz'
-PRECISION = 10 ** 9
+PRECISION = 10 ** 10
 
 def form_dummy_storage():
     return {
@@ -18,7 +18,10 @@ def form_dummy_storage():
             "TEZ" : 1000 * PRECISION,
             "ETH" : 1000 * PRECISION,
         },
-        "weight" : {},
+        "weight" : {
+            "TEZ" : int(0.5 * PRECISION),
+            "ETH" : int(0.5 * PRECISION),
+        },
         "swaps" : {},
         "swps_size" : 0,
     }
@@ -46,9 +49,16 @@ def test_swap():
         store = form_dummy_storage()
         eth_cnt = randint(1, 100)
         tez_cnt = randint(1, 100)
+        eth_w = randint(1, 100) / 100
+        tez_w = 1 - eth_w
+
         store["trader"]["user_wallet"] = {
             "ETH" : eth_cnt * PRECISION,
             "TEZ" : tez_cnt * PRECISION,
+        }
+        store["weight"] = {
+            "TEZ" : int(tez_w * PRECISION),
+            "ETH" : int(eth_w * PRECISION),
         }
         store["input_token"] = "ETH"
         store["output_token"] = "TEZ"
@@ -56,10 +66,11 @@ def test_swap():
         
         result = obj.interpret(storage=store)
         delta = result.storage['trader']['user_wallet']['TEZ'] - tez_cnt * PRECISION
-        real_delta = swap(store['reserve']['TEZ'] // PRECISION, store['reserve']['ETH'] // PRECISION, 0.5, 0.5, store["inp_token_amount"] // PRECISION)
+        real_delta = swap(store['reserve']['TEZ'] // PRECISION, store['reserve']['ETH'] // PRECISION, eth_w, tez_w, store["inp_token_amount"] // PRECISION)
         
         res_store = result.storage
-        assert abs(delta / PRECISION - real_delta) < 1e-3
+        
+        assert abs(delta / PRECISION - real_delta) < 2e-3
         assert res_store['swps_size'] == 1
         
         assert res_store['reserve']['TEZ'] == store['reserve']['TEZ'] - delta
@@ -92,5 +103,4 @@ def test_empty_pool():
     with pytest.raises(MichelsonRuntimeError) as error:
         result = obj.interpret(storage=store)
     assert 'No such token in liquidity pool' in str(error)
-    
     
