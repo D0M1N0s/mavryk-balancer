@@ -4,6 +4,7 @@ import { InMemorySigner } from '@taquito/signer'
 
 const acc = require('../hangzhounet.json')  // issuer's accaunt needed
 const PRECISION = 1000000;
+
 export class FA12_Caller {
     private tezos: TezosToolkit
     rpcUrl: string

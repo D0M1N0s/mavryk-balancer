@@ -8,11 +8,11 @@ const TOKEN_AMOUNT = 1 //количество токенов для отправ
 
 
 const RPC_URL = 'https://rpc.tzkt.io/hangzhou2net/'
-const TOKENSALE_CONTRACT = 'KT1QrGJeXK96C9uMCb7vtFdCgHYuRSJdboqS' //адрес контракта для токенсейла с балансером
+const TOKENSALE_CONTRACT = 'KT1Eqk2kNTck9RTpzSkDQPRynYmSJ5siojjc' //адрес контракта для токенсейла с балансером
 // const RECEIVER = 'tz1MtDKdcXrk4s9aMA73uVjCSFpd1WEqRM2H'
 
 let open_sale_json_map = `{ 
-            "total_token_amount" : 2,
+            "total_token_amount" : 10,
             "close_date" : "2022-01-01T00:01:30Z",
             "token_weight" : 80,
             "total_tezos_amount" : 2,
@@ -31,9 +31,9 @@ const open_sale = async () => {
 const buy_token = async () => {
     await caller.buy_token(buy_token_json_map, TOKENSALE_CONTRACT);
 };
-open_sale()
+// open_sale()
 
-// buy_token();
+buy_token();
 
 // caller.buy_token(buy_token_json_map, TOKENSALE_CONTRACT);
 // caller.transfer_tokens(TOKEN_STANDART_CONTRACT, SENDER_, RECEIVER_, TOKEN_AMOUNT)
