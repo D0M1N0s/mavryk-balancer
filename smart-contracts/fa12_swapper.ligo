@@ -15,7 +15,7 @@ type storage is big_map (address, token)
 
 type buyTokenParameter is tez * address
 type closeSaleParameter is nat
-type openSaleParameter is  address * nat * tez * timestamp * weights_t
+type openSaleParameter is  address * nat * timestamp * weights_t
 
 type balancerEntrypoint is
     OpenSale of openSaleParameter
@@ -26,7 +26,6 @@ type returnType is list (operation) * storage
 
 function open_sale( var token_address : address; // think, that issuer's account call this contract, so Tezos.sender != standart_contract_address  
                     var total_token_amount : nat;
-                    var total_tezos_amount : tez;
                     var close_date : timestamp; 
                     var weights: weights_t;  
                     var store : storage)  
@@ -39,7 +38,7 @@ function open_sale( var token_address : address; // think, that issuer's account
         close_date  = close_date;
         weights = weights;
         total_token_amount = total_token_amount;
-        total_tezos_amount = total_tezos_amount;
+        total_tezos_amount = Tezos.amount;  // stores the amount of tezos laying on the contract's address
         token_sale_is_open = True;
     ];
     const token_contract : contract(entryAction) =
@@ -52,7 +51,7 @@ function open_sale( var token_address : address; // think, that issuer's account
     const op : operation = Tezos.transaction (Transfer(param), 0mutez, token_contract);
     const operations : list (operation) = list [op]
   } with (operations, store)
-  //} with ((nil : list (operation)), store)
+
 
 
 function buy_token (var tezos_amnt : tez; var token_address : address; var store : storage) : returnType is
@@ -87,7 +86,7 @@ function close_sale (var winning_ticket_number : nat; var store : storage) : ret
 
 function main (var action : balancerEntrypoint; var store : storage): returnType is
     case action of
-        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, store)
+        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, store)
         | BuyToken (param) -> buy_token(param.0, param.1, store)
         | CloseSale (param) -> close_sale (param, store)
     end

@@ -48,7 +48,7 @@ export class FA12_Caller {
       .then((hash) => console.log(`Hash: https://hangzhou2net.tzkt.io/${hash}`)) //получаем хеш операции
       .catch((error) => console.log(`Error: ${JSON.stringify(error, null, 2)}`))
   }
-  
+
   public async open_sale(json_map : string, contract : string) {
     this.tezos.contract
     .at(contract)
@@ -56,9 +56,9 @@ export class FA12_Caller {
       let methods = c.parameterSchema.ExtractSignatures();
       // console.log(JSON.stringify(methods, null, 2));
       console.log("Opening sale");
-      const {total_token_amount, total_tezos_amount, close_date, token_weight} = JSON.parse(json_map);
+      const {total_token_amount, token_address, close_date, token_weight} = JSON.parse(json_map);
       
-      return c.methods.openSale("KT1LDjRzueHme3nDQGC9irB7MtWDVstm3ebC", total_token_amount, total_tezos_amount, close_date, token_weight, 100 - token_weight).send();  
+      return c.methods.openSale(token_address, total_token_amount, close_date, token_weight, 100 - token_weight).send();  
     })
     .then((op) => {
       console.log(`Awaiting for ${op.hash} to be confirmed...`)
