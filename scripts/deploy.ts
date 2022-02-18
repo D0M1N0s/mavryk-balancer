@@ -21,32 +21,10 @@ async function deploy() {
   try {
     const op = await tezos.contract.originate({
         //код смарт-контракта
-        code: fs.readFileSync("../build/amm.tz", "utf-8").toString(),
+        code: fs.readFileSync("../build/fa12_swapper.tz", "utf-8").toString(),
         //значение хранилища
-        storage: {
-            "trader":{
-               "user_wallet":MichelsonMap.fromLiteral({
-                  "ETH":710000000000,
-                  "TEZ":930000000000
-               }),
-               "user_address":12
-            },
-            "input_token":"ETH",
-            "output_token":"TEZ",
-            "inp_token_amount":200000000000,
-            "reserve": MichelsonMap.fromLiteral({
-               "TEZ":0,
-               "ETH":0
-            }),
-            "weight":MichelsonMap.fromLiteral({
-               "TEZ":5000000000,
-               "ETH":5000000000
-            }),
-            "swaps": MichelsonMap.fromLiteral({
-            }),
-            "swps_size":0
-         }
-        //JSON.parse(fs.readFileSync("./build/storage.json", "utf-8")), // here problem
+        storage: new MichelsonMap(),
+        balance : '0.3' // initial contract balance
     })
 
     //начало развертывания
