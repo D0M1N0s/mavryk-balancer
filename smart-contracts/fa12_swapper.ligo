@@ -15,7 +15,7 @@ type storage is big_map (address, token)
 
 type buyTokenParameter is tez * address
 type closeSaleParameter is nat
-type openSaleParameter is  nat * tez * timestamp * weights_t
+type openSaleParameter is  address * nat * tez * timestamp * weights_t
 
 type balancerEntrypoint is
     OpenSale of openSaleParameter
@@ -24,14 +24,16 @@ type balancerEntrypoint is
 
 type returnType is list (operation) * storage
 
-function open_sale( var total_token_amount : nat;
+function open_sale( var token_address : address; // think, that issuer's account call this contract, so Tezos.sender != standart_contract_address  
+                    var total_token_amount : nat;
                     var total_tezos_amount : tez;
                     var close_date : timestamp; 
                     var weights: weights_t;  
                     var store : storage)  
                     : returnType is
   block {
-    var token_address : address := Tezos.sender; // hmm
+    // todo later: to check that the sale wasn't started
+    // var token_address : address := Tezos.sender; // hmm
     store[token_address] := record [
         address = token_address;
         close_date  = close_date;
@@ -40,7 +42,17 @@ function open_sale( var total_token_amount : nat;
         total_tezos_amount = total_tezos_amount;
         token_sale_is_open = True;
     ];
-  } with ((nil : list (operation)), store)
+    const token_contract : contract(entryAction) =
+      case (Tezos.get_contract_opt(token_address) : option (contract (entryAction))) of
+        Some (contract) -> contract
+        | None -> (failwith ("Contract for this token not found.") : contract (entryAction))
+      end;
+    var token_amnt : nat := 2n; // will be calculated by amm
+    var param : transferParams := (Tezos.sender, (Tezos.self_address, total_token_amount));
+    const op : operation = Tezos.transaction (Transfer(param), 0mutez, token_contract);
+    const operations : list (operation) = list [op]
+  } with (operations, store)
+  //} with ((nil : list (operation)), store)
 
 
 function buy_token (var tezos_amnt : tez; var token_address : address; var store : storage) : returnType is
@@ -59,10 +71,12 @@ function buy_token (var tezos_amnt : tez; var token_address : address; var store
             | None -> (failwith ("Contract for this token not found.") : contract (entryAction))
         end;
         var token_amnt : nat := 2n; // will be calculated by amm
-        var reciever : address := Tezos.sender;
+        var reciever : address := Tezos.sender; // hmm, the function to buy will be called from which address?
+        
         var param : transferParams := (Tezos.self_address, ((reciever, token_amnt)));
         const op : operation = Tezos.transaction (Transfer(param), 0tez, token_contract);
         const operations : list (operation) = list [op]
+        // todo: to calculate token_amnt with amm, to change storage
     } with (operations, store)
     
 
@@ -73,7 +87,7 @@ function close_sale (var winning_ticket_number : nat; var store : storage) : ret
 
 function main (var action : balancerEntrypoint; var store : storage): returnType is
     case action of
-        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, store)
+        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, store)
         | BuyToken (param) -> buy_token(param.0, param.1, store)
         | CloseSale (param) -> close_sale (param, store)
     end
