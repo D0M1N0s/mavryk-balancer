@@ -15,7 +15,7 @@ export class FA12_Caller {
     this.tezos.setSignerProvider(InMemorySigner.fromFundraiser(acc.email, acc.password, acc.mnemonic.join(' ')))
   }
 
-  public buy_token(json_map : string, contract: string) {
+  public  buy_token(json_map : string, contract: string) {
     this.tezos.contract
     .at(contract)
     .then((contract) => {
@@ -33,7 +33,8 @@ export class FA12_Caller {
     .catch((error) => console.log(`Error: ${JSON.stringify(error, null, 2)}`))
   }
 
-  public async transfer_tokens(standart_contract: string, sender: string, receiver: string, amount: number) {
+  // moved transfering tokens in smart contract => need to delete this func
+  public transfer_tokens(standart_contract: string, sender: string, receiver: string, amount: number) {
     this.tezos.contract
       .at(standart_contract) //обращаемся к контракту по адресу
       .then((contract) => {
@@ -50,21 +51,24 @@ export class FA12_Caller {
   }
 
   public async open_sale(json_map : string, contract : string) {
-    this.tezos.contract
-    .at(contract)
-    .then((c) => {
-      let methods = c.parameterSchema.ExtractSignatures();
-      // console.log(JSON.stringify(methods, null, 2));
-      console.log("Opening sale");
-      const {total_token_amount, token_address, close_date, token_weight} = JSON.parse(json_map);
-      
-      return c.methods.openSale(token_address, total_token_amount, close_date, token_weight, 100 - token_weight).send();  
-    })
-    .then((op) => {
-      console.log(`Awaiting for ${op.hash} to be confirmed...`)
-      return op.confirmation(1).then(() => op.hash) //ждем одно подтверждение сети
-    })
-    .then((hash) => console.log(`Hash: https://hangzhou2net.tzkt.io/${hash}`)) //получаем хеш операции
-    .catch((error) => console.log(`Error 1: ${JSON.stringify(error, null, 2)}`))
+    //let open = async() => {
+      this.tezos.contract
+      .at(contract)
+      .then((c) => {
+        let methods = c.parameterSchema.ExtractSignatures();
+        // console.log(JSON.stringify(methods, null, 2));
+        console.log("Opening sale");
+        const {total_token_amount, token_address, close_date, token_weight} = JSON.parse(json_map);
+        
+        return c.methods.openSale(token_address, total_token_amount, close_date, token_weight, 100 - token_weight).send();  
+      })
+      .then((op) => {
+        console.log(`Awaiting for ${op.hash} to be confirmed...`)
+        return op.confirmation(1).then(() => op.hash) //ждем одно подтверждение сети
+      })
+      .then((hash) => console.log(`Hash: https://hangzhou2net.tzkt.io/${hash}`)) //получаем хеш операции
+      .catch((error) => console.log(`Error 1: ${JSON.stringify(error, null, 2)}`))
+    //}
+    //await async() => { open()};
   }
 }
