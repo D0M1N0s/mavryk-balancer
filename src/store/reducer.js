@@ -1,12 +1,10 @@
+import tokenOperations from './tokenOperations';
+import walletOperations from './walletOperations';
 import { combineReducers } from 'redux';
 
-// reducer import
-import customizationReducer from './customizationReducer';
-
-// ==============================|| COMBINE REDUCER ||============================== //
-
 const reducer = combineReducers({
-    customization: customizationReducer
+    token: tokenOperations,
+    wallet: walletOperations
 });
 
 export default reducer;
