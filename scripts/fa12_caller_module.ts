@@ -24,13 +24,13 @@ export class FA12_Caller {
             
             const {tezos_amount, token_address} = JSON.parse(json_map)
             return contract.methods.buyToken(tezos_amount, token_address)
-                .send({amount : tezos_amount / PRECISION});    // {amount : tezos_amount}
+                .send({amount : tezos_amount / PRECISION});
         })
         .then((op) => {
             console.log(`Awaiting for ${op.hash} to be confirmed...`)
-            return op.confirmation(1).then(() => op.hash) //ждем одно подтверждение сети
+            return op.confirmation(1).then(() => op.hash) 
         })
-        .then((hash) => console.log(`Hash: https://hangzhou2net.tzkt.io/${hash}`)) //получаем хеш операции
+        .then((hash) => console.log(`Hash: https://hangzhou2net.tzkt.io/${hash}`)) 
         .catch((error) => console.log(`Error: ${JSON.stringify(error, null, 2)}`))
     }
 
@@ -85,11 +85,11 @@ export class FA12_Caller {
         .catch((error) => console.log(`Error: ${JSON.stringify(error, null, 2)}`))
     }
 
-    public open_sale(json_map : string, contract : string) {
-        const {sender, token_address, tokensale_contract, total_token_amount} = JSON.parse(json_map);
+    public open_sale(json_map : string, tokensale_contract : string) {
+        const {sender, token_address, total_token_amount} = JSON.parse(json_map);
         return this.approve_token_transfer(token_address,  sender, tokensale_contract, total_token_amount)
             .then(() => {
-                return this.open_sale_entrypoint(json_map, contract);
+                return this.open_sale_entrypoint(json_map, tokensale_contract);
             });
     }
 }
