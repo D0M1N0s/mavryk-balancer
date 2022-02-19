@@ -32,7 +32,7 @@ function open_sale( var token_address : address; // think, that issuer's account
                     : returnType is
   block {
     // todo later: to check that the sale wasn't started
-    // var token_address : address := Tezos.sender; // hmm
+    
     store[token_address] := record [
         address = token_address;
         close_date  = close_date;
@@ -47,14 +47,15 @@ function open_sale( var token_address : address; // think, that issuer's account
         | None -> (failwith ("Contract for this token not found.") : contract (entryAction))
       end;
     var token_amnt : nat := 1n; // will be calculated by amm
-    var param : transferParams := (Tezos.self_address, (Tezos.sender, total_token_amount)); // to swap sender and reciever, but then doesn't work
-    const op : operation = Tezos.transaction (Transfer(param), 0mutez, token_contract);
-    const operations : list (operation) = list [op]
+    
+    var transfer_param : transferParams := (Tezos.sender, ( Tezos.self_address, total_token_amount)); // to swap sender and reciever, but then doesn't work
+    const op : operation = Tezos.transaction (Transfer(transfer_param), 0mutez, token_contract);
+    const operations : list (operation) = list [op];
   } with (operations, store)
 
 
 
-function buy_token (var tezos_amnt : mutez; var token_address : address; var store : storage) : returnType is
+function buy_token (var tezos_amnt : tez; var token_address : address; var store : storage) : returnType is
   block {
       var cur_token : token := case store[token_address] of
         | Some(val) -> val
@@ -70,10 +71,10 @@ function buy_token (var tezos_amnt : mutez; var token_address : address; var sto
             | None -> (failwith ("Contract for this token not found.") : contract (entryAction))
         end;
         var token_amnt : nat := 2n; // will be calculated by amm
-        if token_amnt > cur_token.total_token_amount then block {
-            failwith ("Not enough tokens in liquidity pool");
-        }
-        else skip;
+        // if token_amnt > cur_token.total_token_amount then block {
+        //     failwith ("Not enough tokens in liquidity pool");
+        // }
+        // else skip;
         var reciever : address := Tezos.sender; // hmm, the function to buy will be called from which address?
         
         var param : transferParams := (Tezos.self_address, ((reciever, token_amnt)));
