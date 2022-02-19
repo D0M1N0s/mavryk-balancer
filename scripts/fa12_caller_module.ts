@@ -67,7 +67,7 @@ export class FA12_Caller {
             return op.confirmation(1).then(() => op.hash) 
         })
         .then((hash) => console.log(`Hash: https://hangzhou2net.tzkt.io/${hash}`))
-        .catch((error) => console.log(`Error 1: ${JSON.stringify(error, null, 2)}`))
+        // .catch((error) => console.log(`Error 1: ${JSON.stringify(error, null, 2)}`))
     }
 
     private approve_token_transfer(standart_contract: string, sender: string, receiver: string, amount: number) {
@@ -90,6 +90,9 @@ export class FA12_Caller {
         return this.approve_token_transfer(token_address,  sender, tokensale_contract, total_token_amount)
             .then(() => {
                 return this.open_sale_entrypoint(json_map, tokensale_contract);
+            }).catch((error) => {
+                console.log(`Error: ${JSON.stringify(error, null, 2)}`);
+                return this.approve_token_transfer(token_address,  sender, tokensale_contract, 0);
             });
     }
     public close_sale(tokensale_contract : string, token_contract : string) {

@@ -2,9 +2,9 @@ import { FA12_Caller } from './fa12_caller_module'
 
 const TOKEN_STANDART_CONTRACT = 'KT1LDjRzueHme3nDQGC9irB7MtWDVstm3ebC' // адрес опубликованного контракта стандарта токена
 const SENDER = 'tz1MtDKdcXrk4s9aMA73uVjCSFpd1WEqRM2H' // публичный адрес отправителя (эмитента)
-const TOKENSALE_CONTRACT = 'KT1F75eCUox3cyuKorbSzzR1K2APfrUmriyS' // адрес контракта для токенсейла с балансером
+const TOKENSALE_CONTRACT = 'KT1LbaBPNUkmwRn3BcZmtvwW1k1u1r5rYuEY' // адрес контракта для токенсейла с балансером
 
-const TOKEN_AMOUNT = 3; // количество токенов для отправки.
+const TOKEN_AMOUNT = 13; // количество токенов для отправки.
 const TEZOS_AMOUNT = 2; // количество тезосов для отправки.
 const TOKEN_WEIGHT = 80;
 const CLOSE_DATE = "2022-01-01T00:01:30Z"

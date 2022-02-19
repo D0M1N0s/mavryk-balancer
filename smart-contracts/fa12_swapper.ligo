@@ -31,8 +31,13 @@ function open_sale( var token_address : address; // think, that issuer's account
                     var store : storage)  
                     : returnType is
   block {
-    // todo later: to check that the sale wasn't started
-    
+    case store[token_address] of
+      | Some(val) -> block {
+          if val.token_sale_is_open then failwith ("Tokensale is already open");
+          else skip;
+        }
+      | None -> skip
+    end;
     store[token_address] := record [
         address = token_address;
         close_date  = close_date;
@@ -79,7 +84,7 @@ function buy_token (var tezos_amnt : tez; var token_address : address; var store
       var param : transferParams := (Tezos.self_address, ((reciever, token_amnt)));
       const op : operation = Tezos.transaction (Transfer(param), 0tez, token_contract);
       const operations : list (operation) = list [op];
-        // todo: to calculate token_amnt with amm, to change storage
+      // todo: to calculate token_amnt with amm, to change storage
       cur_token.total_token_amount := abs(cur_token.total_token_amount - token_amnt);
       cur_token.total_tezos_amount := cur_token.total_tezos_amount + tezos_amnt;
       store[token_address] := cur_token;
