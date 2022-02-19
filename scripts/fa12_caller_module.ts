@@ -92,4 +92,18 @@ export class FA12_Caller {
                 return this.open_sale_entrypoint(json_map, tokensale_contract);
             });
     }
+    public close_sale(tokensale_contract : string, token_contract : string) {
+        return this.tezos.contract
+        .at(tokensale_contract) 
+        .then((contract) => {
+            console.log(`Closing tokensale for token ${token_contract} to spend...`)
+            return contract.methods.closeSale(token_contract).send()
+        })
+        .then((op) => {
+            console.log(`Awaiting for ${op.hash} to be confirmed...`)
+            return op.confirmation(1).then(() => op.hash) 
+        })
+        .then((hash) => console.log(`Hash: https://hangzhou2net.tzkt.io/${hash}`)) 
+        .catch((error) => console.log(`Error: ${JSON.stringify(error, null, 2)}`))
+    }
 }

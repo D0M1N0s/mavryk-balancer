@@ -14,11 +14,11 @@ type token is record [
 type storage is big_map (address, token)
 
 type buyTokenParameter is tez * address
-type closeSaleParameter is nat
+type closeSaleParameter is address
 type openSaleParameter is  address * nat * timestamp * weights_t
 
 type balancerEntrypoint is
-    OpenSale of openSaleParameter
+    | OpenSale of openSaleParameter
     | BuyToken of buyTokenParameter
     | CloseSale of closeSaleParameter
 
@@ -46,7 +46,6 @@ function open_sale( var token_address : address; // think, that issuer's account
         Some (contract) -> contract
         | None -> (failwith ("Contract for this token not found.") : contract (entryAction))
       end;
-    var token_amnt : nat := 1n; // will be calculated by amm
     
     var transfer_param : transferParams := (Tezos.sender, ( Tezos.self_address, total_token_amount)); // to swap sender and reciever, but then doesn't work
     const op : operation = Tezos.transaction (Transfer(transfer_param), 0mutez, token_contract);
@@ -65,31 +64,43 @@ function buy_token (var tezos_amnt : tez; var token_address : address; var store
         failwith("Tokensale is closed");
       } 
       else skip;
-        const token_contract : contract(entryAction) =
-        case (Tezos.get_contract_opt(token_address) : option (contract (entryAction))) of
-            Some (contract) -> contract
-            | None -> (failwith ("Contract for this token not found.") : contract (entryAction))
-        end;
-        var token_amnt : nat := 2n; // will be calculated by amm
+      const token_contract : contract(entryAction) =
+      case (Tezos.get_contract_opt(token_address) : option (contract (entryAction))) of
+          Some (contract) -> contract
+          | None -> (failwith ("Contract for this token not found.") : contract (entryAction))
+      end;
+      var token_amnt : nat := 2n; // will be calculated by amm
         // if token_amnt > cur_token.total_token_amount then block {
         //     failwith ("Not enough tokens in liquidity pool");
         // }
         // else skip;
-        var reciever : address := Tezos.sender; // hmm, the function to buy will be called from which address?
+      var reciever : address := Tezos.sender; // hmm, the function to buy will be called from which address?
         
-        var param : transferParams := (Tezos.self_address, ((reciever, token_amnt)));
-        const op : operation = Tezos.transaction (Transfer(param), 0tez, token_contract);
-        const operations : list (operation) = list [op];
+      var param : transferParams := (Tezos.self_address, ((reciever, token_amnt)));
+      const op : operation = Tezos.transaction (Transfer(param), 0tez, token_contract);
+      const operations : list (operation) = list [op];
         // todo: to calculate token_amnt with amm, to change storage
-        cur_token.total_token_amount := abs(cur_token.total_token_amount - token_amnt);
-        cur_token.total_tezos_amount := cur_token.total_tezos_amount + tezos_amnt;
-        store[token_address] := cur_token;
-    } with (operations, store)
+      cur_token.total_token_amount := abs(cur_token.total_token_amount - token_amnt);
+      cur_token.total_tezos_amount := cur_token.total_tezos_amount + tezos_amnt;
+      store[token_address] := cur_token;
+  } with (operations, store)
     
 
-function close_sale (var winning_ticket_number : nat; var store : storage) : returnType is
+function close_sale (var token_address : address; var store : storage) : returnType is
   block {
-      skip;
+    var cur_token : token := case store[token_address] of
+        | Some(val) -> val
+        | None -> failwith("No such token in tokensale")
+    end;
+    if not cur_token.token_sale_is_open then block {
+      failwith("Tokensale is already closed");
+    } else skip;
+    if Tezos.now < cur_token.close_date then block {
+      failwith("Closing time hasn't come yet");
+    } else skip;
+    cur_token.token_sale_is_open := False;
+    store[token_address] := cur_token;
+    // add burning tokens and sending money to issuer
   } with ((nil : list (operation)), store)
 
 function main (var action : balancerEntrypoint; var store : storage): returnType is
