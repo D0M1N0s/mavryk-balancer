@@ -5,9 +5,8 @@ import { Grid } from '@mui/material';
 
 // project imports
 import TradingCard from './TradingCard';
-import PriceHistory from './PriceHistory';
+import OpenSale from './OpenSale';
 import WalletCard from './WalletCard';
-import Trends from './Trends';
 import { gridSpacing } from 'store/constant';
 
 // ==============================|| DEFAULT DASHBOARD ||============================== //
@@ -27,16 +26,13 @@ const Dashboard = () => {
                             <Grid item sm={6} xs={12} md={6} lg={12}>
                                 <WalletCard isLoading={isLoading} />
                             </Grid>
-                            <Grid item sm={6} xs={12} md={6} lg={12}>
-                                <Trends isLoading={isLoading} />
-                            </Grid>
                         </Grid>
                     </Grid>
                     <Grid item lg={4} md={6} sm={6} xs={12}>
                         <TradingCard isLoading={isLoading} />
                     </Grid>
                     <Grid item lg={4} md={6} sm={6} xs={12}>
-                        <PriceHistory isLoading={isLoading} />
+                        <OpenSale isLoading={isLoading} />
                     </Grid>
                 </Grid>
             </Grid>

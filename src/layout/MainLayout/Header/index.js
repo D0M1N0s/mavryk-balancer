@@ -28,11 +28,11 @@ const Header = () => {
                 </Box>
             </Box>
 
-            {/* header space */}
-            <Box sx={{ flexGrow: 1 }} />
-
             {/* wallet */}
             <WalletSection />
+
+            {/* header space */}
+            <Box sx={{ flexGrow: 1 }} />
         </>
     );
 };
