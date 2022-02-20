@@ -2,7 +2,6 @@ import { MichelsonMap, TezosToolkit } from '@taquito/taquito'
 import { InMemorySigner } from '@taquito/signer'
 
 
-const acc = require('../hangzhounet.json')  // issuer's accaunt needed
 const c_PRECISION = 10000000000;
 function to_float(value : number) {
     return value * c_PRECISION;
@@ -14,7 +13,7 @@ export class FA12_Caller {
     private tezos: TezosToolkit
     rpcUrl: string
 
-    constructor(rpcUrl: string) {
+    constructor(rpcUrl: string, acc : any) {
         this.tezos = new TezosToolkit(rpcUrl)
         this.rpcUrl = rpcUrl
         //объявляем параметры с помощью метода fromFundraiser: почту, пароль и мнемоническую фразу, из которой можно получить приватный ключ

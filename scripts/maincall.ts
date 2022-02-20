@@ -1,5 +1,6 @@
 import { FA12_Caller } from './fa12_caller_module'
 
+const acc = require('../hangzhounet.json')  // issuer's accaunt needed
 const TOKEN_STANDART_CONTRACT = 'KT1LDjRzueHme3nDQGC9irB7MtWDVstm3ebC' // адрес опубликованного контракта стандарта токена
 const SENDER = 'tz1MtDKdcXrk4s9aMA73uVjCSFpd1WEqRM2H' // публичный адрес отправителя (эмитента)
 const TOKENSALE_CONTRACT = 'KT1PqZsey9vN7C6HwLjDuGnZcqdRCvqvZS7e' // адрес контракта для токенсейла с балансером
@@ -25,7 +26,7 @@ let buy_token_json_map = `{
             "token_address" : "${TOKEN_STANDART_CONTRACT}"
             }`
 
-let caller = new FA12_Caller(RPC_URL);
+let caller = new FA12_Caller(RPC_URL, acc);
 
 caller.open_sale(open_sale_json, TOKENSALE_CONTRACT).then(() => {
     return caller.buy_token(buy_token_json_map, TOKENSALE_CONTRACT);
