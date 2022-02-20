@@ -3,8 +3,13 @@ import { InMemorySigner } from '@taquito/signer'
 
 
 const acc = require('../hangzhounet.json')  // issuer's accaunt needed
-const PRECISION = 1000000;
-
+const c_PRECISION = 10000000000;
+function to_float(value : number) {
+    return value * c_PRECISION;
+}
+function to_number(value : number) {
+    return value / c_PRECISION;
+}
 export class FA12_Caller {
     private tezos: TezosToolkit
     rpcUrl: string
@@ -15,16 +20,18 @@ export class FA12_Caller {
         //объявляем параметры с помощью метода fromFundraiser: почту, пароль и мнемоническую фразу, из которой можно получить приватный ключ
         this.tezos.setSignerProvider(InMemorySigner.fromFundraiser(acc.email, acc.password, acc.mnemonic.join(' ')))
     }
-
+    public change_account(account : any) {
+        this.tezos.setSignerProvider(InMemorySigner.fromFundraiser(account.email, account.password, account.mnemonic.join(' ')))
+    }
     public  buy_token(json_map : string, contract: string) {
         this.tezos.contract
         .at(contract)
         .then((contract) => {
             let methods = contract.parameterSchema.ExtractSignatures();
-            
             const {tezos_amount, token_address} = JSON.parse(json_map)
-            return contract.methods.buyToken(tezos_amount, token_address)
-                .send({amount : tezos_amount / PRECISION});
+            console.log(`User buyes some tokens ${token_address} with ${tezos_amount} ꜩ`)
+            return contract.methods.buyToken(to_float(tezos_amount), token_address)
+                .send({amount : tezos_amount});
         })
         .then((op) => {
             console.log(`Awaiting for ${op.hash} to be confirmed...`)
@@ -35,7 +42,7 @@ export class FA12_Caller {
     }
 
   // moved transfering tokens in smart contract => need to delete this func
-    private transfer_tokens(standart_contract: string, sender: string, receiver: string, amount: number) {
+    public transfer_tokens(standart_contract: string, sender: string, receiver: string, amount: number) {
         return this.tezos.contract
         .at(standart_contract) //обращаемся к контракту по адресу
         .then((contract) => {
@@ -57,10 +64,11 @@ export class FA12_Caller {
         .then((c) => {
             let methods = c.parameterSchema.ExtractSignatures();
             
-            console.log("Opening sale");
             const {total_tezos_amount, total_token_amount, token_address, close_date, token_weight} = JSON.parse(json_map);
-            return c.methods.openSale(token_address, total_token_amount, close_date, token_weight, 100 - token_weight)
-            .send({amount : total_tezos_amount / PRECISION});  // here need to put the amnt of tez to put on contract
+            console.log(`Opening sale with ${total_tezos_amount} ꜩ and ${total_token_amount}`);
+            return c.methods.openSale(token_address, to_float(total_token_amount), to_float(total_tezos_amount), 
+                                close_date, to_float(token_weight), to_float(1) - to_float(token_weight))
+            .send({amount : total_tezos_amount});  // here need to put the amnt of tez to put on contract
         })
         .then((op) => {
             console.log(`Awaiting for ${op.hash} to be confirmed...`)
