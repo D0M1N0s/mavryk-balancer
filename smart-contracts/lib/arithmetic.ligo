@@ -1,4 +1,4 @@
-const c_PRECISION : nat = 10_000_000_000n;
+const c_PRECISION : nat = 10_000_000_000n; // 10 ** 10
 
 function mul(var a : int; var b : int) : int is 
     block {
@@ -44,8 +44,6 @@ function pow_float_into_nat(var a : nat; var power : nat) : nat is
         }
     } with res
 
-
-
 // gets the approximation of a ^ (root_pow / c_PRECISION) with Taylor series 
 // x ^ alpha = sum binomial(alpha, n) * (x - 1) ^ n for n from 0 to infty
 // we call this function only for 0 < x < 1 => Taylor series converges
@@ -64,10 +62,11 @@ function approx_pow_float(var base : nat; var alpha : nat) : nat is
         }
     } with abs(res)
 
-// a ^ (power / presision) = a ^ (power // presision) * a ^ (power % c_PRECISION) / c_PRECISION
+// a ^ (power / c_PRECISION) = a ^ (power // c_PRECISION) * a ^ (power % c_PRECISION) / c_PRECISION
 function pow_floats(var a : nat; var power : nat) : nat is
     block {
         var mul1 : nat := pow_float_into_nat(a, power / c_PRECISION);
         var mul2 : nat := approx_pow_float(a, power mod c_PRECISION);
         var res : nat := mul_floats(mul1, mul2);
     } with res
+

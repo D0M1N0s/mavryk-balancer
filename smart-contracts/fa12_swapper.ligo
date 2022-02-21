@@ -1,5 +1,5 @@
-#include "fa12_types.ligo"
-#include "arithmetic.ligo"
+#include "token_types/fa12_types.ligo"
+#include "lib/arithmetic.ligo"
 
 type float is nat
 type weights_t is michelson_pair(int, "token_weight", int, "tezos_weight")
