@@ -6,7 +6,6 @@ import {
     Divider,
     Box,
     Grid,
-    InputLabel,
     Select,
     FormControl,
     OutlinedInput,
@@ -17,30 +16,31 @@ import {
     Button,
     ListItem,
     List,
-    ListItemText
+    ListItemText,
+    ListItemButton,
+    Chip
 } from '@mui/material';
 
 // project imports
 import SkeletonTradingCard from 'ui-component/cards/Skeleton/SkeletonTradingCard';
+import store from 'store';
 
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
 
 const TradingCard = ({ isLoading }) => {
-    const style = {
-        width: '100%',
-        maxWidth: 360,
-        bgcolor: 'background.paper'
-    };
-
-    const [inputToken, setInputToken] = React.useState('');
     const [values, setValues] = React.useState({
-        input: '',
-        output: ''
+        input: 0,
+        input_token: '',
+        output: 0
     });
+
+    const handleListItemClick = (event, currentToken) => {
+        setValues({ ...values, input_token: currentToken });
+        console.log(values);
+    };
 
     const handleChange = (prop) => (event) => {
         setValues({ ...values, [prop]: event.target.value });
-        setInputToken(event.target.value);
     };
 
     return (
@@ -48,65 +48,64 @@ const TradingCard = ({ isLoading }) => {
             {isLoading ? (
                 <SkeletonTradingCard />
             ) : (
-                <Box sx={{ p: 2.25 }}>
+                <Box sx={{ p: 1.5 }}>
                     <Grid container direction="column">
                         <Grid item>
-                            <Typography variant="h4" align="center" sx={0}>
-                                Trending tokens to buy.
-                            </Typography>
+                            <Chip
+                                label={
+                                    <Typography variant="h4" align="center" sx={0}>
+                                        Buy tokens :
+                                    </Typography>
+                                }
+                                variant="outlined"
+                            />
                         </Grid>
                         <Divider />
-                        <Grid item>
-                            <Grid container direction="row" justifyContent="center" alignItems="stretch">
-                                <Grid item>
-                                    <InputLabel id="input-token-select-label">Token</InputLabel>
-                                    <Select
-                                        labelId="input-token-select-label"
-                                        id="input-token-select"
-                                        value={inputToken}
-                                        label="Input Token"
-                                        onChange={handleChange}
-                                    >
-                                        <MenuItem value={10}>Etherium</MenuItem>
-                                        <MenuItem value={20}>Tezos</MenuItem>
-                                        <MenuItem value={30}>Bitcoin</MenuItem>
-                                    </Select>
-                                </Grid>
-                                <Grid item>
-                                    <FormControl sx={{ m: 1, width: '25ch' }} variant="outlined">
-                                        <OutlinedInput
-                                            id="input-token"
-                                            value={values.input}
-                                            onChange={handleChange('input')}
-                                            endAdornment={<InputAdornment position="end">Token</InputAdornment>}
-                                            aria-describedby="outlined-weight-helper-text"
-                                            inputProps={{
-                                                'aria-label': 'weight'
-                                            }}
-                                        />
-                                        <FormHelperText id="input-token">Token</FormHelperText>
-                                    </FormControl>
-                                </Grid>
-                            </Grid>
-                        </Grid>
                         <Divider />
                         <Grid container direction="row" justifyContent="center" alignItems="stretch">
                             <Grid item>
-                                <InputLabel id="input-token-select-label">Token</InputLabel>
                                 <Select
                                     labelId="input-token-select-label"
                                     id="input-token-select"
-                                    value={inputToken}
+                                    value={values.input_token}
                                     label="Input Token"
-                                    onChange={handleChange}
+                                    onChange={handleChange('input_token')}
                                 >
-                                    <MenuItem value={10}>Etherium</MenuItem>
-                                    <MenuItem value={20}>Tezos</MenuItem>
-                                    <MenuItem value={30}>Bitcoin</MenuItem>
+                                    {store.getState().token.tokens.map((value) => (
+                                        <MenuItem key={value.token_address} value={value.token_address}>
+                                            {value.token_address}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
+                                <FormControl sx={{ width: '25ch' }} variant="outlined">
+                                    <OutlinedInput
+                                        id="input-token"
+                                        value={values.input}
+                                        onChange={handleChange('input')}
+                                        endAdornment={<InputAdornment position="end">Tezos</InputAdornment>}
+                                        aria-describedby="outlined-weight-helper-text"
+                                        inputProps={{
+                                            'aria-label': 'weight'
+                                        }}
+                                    />
+                                    <FormHelperText id="input-token">Tezos</FormHelperText>
+                                </FormControl>
                             </Grid>
                             <Grid item>
-                                <FormControl sx={{ m: 1, width: '25ch' }} variant="outlined">
+                                <Select
+                                    labelId="input-token-select-label"
+                                    id="input-token-select"
+                                    value={values.input_token}
+                                    label="Input Token"
+                                    onChange={handleChange('input_token')}
+                                >
+                                    {store.getState().token.tokens.map((value) => (
+                                        <MenuItem key={value.token_address} value={value.token_address}>
+                                            {value.token_address}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                <FormControl sx={{ width: '25ch' }} variant="outlined">
                                     <OutlinedInput
                                         id="input-token"
                                         value={values.input}
@@ -121,27 +120,31 @@ const TradingCard = ({ isLoading }) => {
                                 </FormControl>
                             </Grid>
                         </Grid>
-                        <Divider />
                         <Grid item>
-                            <Box sx={{ p: 2 }}>
-                                <List sx={style} component="nav" aria-label="mailbox folders">
-                                    <ListItem button divider>
-                                        <ListItemText primary="Etherium/Tezos" />
-                                    </ListItem>
-                                    <ListItem button divider>
-                                        <ListItemText primary="Tezos/Bitcoin" />
-                                    </ListItem>
-                                    <ListItem button divider>
-                                        <ListItemText primary="Etherium/Bitcoin" />
-                                    </ListItem>
-                                    <ListItem button divider>
-                                        <ListItemText primary="Tezos/USD" />
-                                    </ListItem>
+                            <Box sx={{ p: 1.5 }}>
+                                <List
+                                    sx={{
+                                        width: '100%',
+                                        maxWidth: 360,
+                                        bgcolor: 'background.paper',
+                                        position: 'relative',
+                                        overflow: 'auto',
+                                        maxHeight: 300,
+                                        '& ul': { padding: 0 }
+                                    }}
+                                >
+                                    {store.getState().token.tokens.map((value) => (
+                                        <ListItemButton onClick={(event) => handleListItemClick(event, value.token_address)}>
+                                            <ListItem key={value.token_address} disableGutters>
+                                                <ListItemText primary={`Token : ${value.token_address}`} />
+                                            </ListItem>
+                                        </ListItemButton>
+                                    ))}
                                 </List>
                             </Box>
                         </Grid>
-                        <FormControl sx={{ m: 1, width: '43ch' }} variant="outlined" />
-                        <Button variant="contained" disableElevation>
+                        <FormControl sx={{ m: 0.6, width: '43ch' }} variant="outlined" />
+                        <Button variant="outlined" disableElevation>
                             <Typography variant="h4">Exchange Tokens</Typography>
                         </Button>
                         <FormControl />

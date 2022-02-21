@@ -18,28 +18,33 @@ import {
     TextField,
     InputAdornment,
     FormHelperText,
-    Button
+    Button,
+    Chip
 } from '@mui/material';
 
 // project imports
 import SkeletonTradingCard from 'ui-component/cards/Skeleton/SkeletonTradingCard';
+import store from 'store';
 
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
 
 const OpenSale = ({ isLoading }) => {
     const inputRange = [...Array(101).keys()];
     const [values, setValues] = React.useState({
-        token_amount: '',
+        sender: '',
+        token_address: 'first_address',
         close_date: new Date('2014-08-18T21:11:54'),
-        input_weight: 0,
-        output_weight: 0,
-        tezos_amount: '',
-        token_address: '',
-        sender: ''
+        input_weight: 38,
+        output_weight: 62,
+        total_token_amount: 23,
+        total_tezos_amount: 4,
+        token_sale_is_open: true
     });
 
     const openSale = () => {
         console.log(values);
+        const map = store.getState().token.tokens.map((x) => x.address);
+        console.log(map);
     };
 
     const handleChange = (prop) => (event) => {
@@ -65,13 +70,18 @@ const OpenSale = ({ isLoading }) => {
                 <SkeletonTradingCard />
             ) : (
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <Box sx={{ p: 2.25 }}>
+                    <Box sx={{ p: 1.5 }}>
                         <Grid container direction="column">
-                            <Grid container direction="row" justifyContent="center" alignItems="stretch" spacing={0}>
+                            <Grid container direction="row" justifyContent="start" alignItems="stretch">
                                 <Grid item>
-                                    <Typography variant="h4" sx={0}>
-                                        Open sale for your token.
-                                    </Typography>
+                                    <Chip
+                                        label={
+                                            <Typography variant="h4" align="center" sx={0}>
+                                                Open sale for your token :
+                                            </Typography>
+                                        }
+                                        variant="outlined"
+                                    />
                                 </Grid>
                                 <Divider />
                                 <Grid item>
@@ -79,8 +89,8 @@ const OpenSale = ({ isLoading }) => {
                                         <OutlinedInput
                                             id="outlined-adornment-token"
                                             type="number"
-                                            value={values.token_amount}
-                                            onChange={handleChange('token_amount')}
+                                            value={values.total_token_amount}
+                                            onChange={handleChange('total_token_amount')}
                                             endAdornment={<InputAdornment position="end">Tokens</InputAdornment>}
                                             inputProps={{
                                                 'aria-label': 'weight'
@@ -96,8 +106,8 @@ const OpenSale = ({ isLoading }) => {
                                         <OutlinedInput
                                             id="outlined-adornment-token"
                                             type="number"
-                                            value={values.tezos_amount}
-                                            onChange={handleChange('tezos_amount')}
+                                            value={values.total_tezos_amount}
+                                            onChange={handleChange('total_tezos_amount')}
                                             endAdornment={<InputAdornment position="end">Tezos</InputAdornment>}
                                             inputProps={{
                                                 'aria-label': 'weight'
@@ -152,7 +162,7 @@ const OpenSale = ({ isLoading }) => {
                                         <OutlinedInput
                                             id="outlined-adornment-tezos"
                                             type="string"
-                                            value={values.weight}
+                                            value={values.token_address}
                                             onChange={handleChange('token_address')}
                                             inputProps={{
                                                 'aria-label': 'weight'
@@ -174,8 +184,8 @@ const OpenSale = ({ isLoading }) => {
                                     </FormControl>
                                 </Grid>
                                 <Grid item>
-                                    <FormControl sx={{ m: 1, width: '42ch' }} variant="outlined">
-                                        <Button variant="contained" disableElevation onClick={openSale}>
+                                    <FormControl sx={{ width: '42ch' }} variant="outlined">
+                                        <Button variant="outlined" disableElevation onClick={openSale}>
                                             <Typography variant="h4">Open Sale</Typography>
                                         </Button>
                                     </FormControl>

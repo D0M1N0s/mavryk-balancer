@@ -6,7 +6,20 @@ import * as React from 'react';
 import { styled } from '@mui/material/styles';
 
 // material-ui
-import { Box, Grid, Typography, OutlinedInput, Divider, FormControl, InputAdornment, Button, IconButton } from '@mui/material';
+import {
+    Box,
+    Grid,
+    Alert,
+    AlertTitle,
+    Typography,
+    OutlinedInput,
+    Divider,
+    FormControl,
+    InputAdornment,
+    Button,
+    Chip,
+    IconButton
+} from '@mui/material';
 
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 
@@ -39,15 +52,45 @@ const WalletCard = ({ isLoading }) => {
             {isLoading ? (
                 <SkeletonTrends />
             ) : (
-                <Box sx={{ p: 2 }}>
-                    <Grid container direction="row">
-                        <Grid container direction="row" justifyContent="center" alignItems="stretch" spacing={0}>
+                <Box sx={{ p: 1.5 }}>
+                    <Grid container direction="row" spacing={1}>
+                        <Grid container direction="row" justifyContent="start" alignItems="stretch" spacing={0}>
                             <Grid item>
-                                <Typography variant="h4" sx={0}>
-                                    Connect the wallet.
-                                </Typography>
+                                <Chip
+                                    label={
+                                        <Typography variant="h4" align="center" sx={0}>
+                                            Wallet information :
+                                        </Typography>
+                                    }
+                                    variant="outlined"
+                                />
+                                <Alert severity="info" sx={{ width: '43ch' }}>
+                                    <AlertTitle>
+                                        <Typography sx={{ m: 0.2 }} variant="h4">
+                                            Balance : 3453 ꜩ
+                                        </Typography>
+                                    </AlertTitle>
+                                </Alert>
                             </Grid>
-                            <Divider />
+                            <Grid item>
+                                <Alert severity="info" sx={{ width: '43ch' }}>
+                                    <AlertTitle>
+                                        <Typography sx={{ m: 0.2 }} variant="h4">
+                                            Token Balance : 34
+                                        </Typography>
+                                    </AlertTitle>
+                                </Alert>
+                            </Grid>
+                            <Grid item>
+                                <Chip
+                                    label={
+                                        <Typography variant="h4" align="center" sx={0}>
+                                            Wallet information :
+                                        </Typography>
+                                    }
+                                    variant="outlined"
+                                />
+                            </Grid>
                             <Grid item>
                                 <FormControl sx={{ m: 1, width: '43ch' }} variant="outlined">
                                     <OutlinedInput
@@ -90,10 +133,17 @@ const WalletCard = ({ isLoading }) => {
                                     />
                                 </FormControl>
                             </Grid>
-                            <Grid item>
-                                <Typography variant="h4" sx={0}>
-                                    OR
-                                </Typography>
+                            <Grid item justifyContent="center">
+                                <FormControl sx={{ m: 1, width: '42ch' }} variant="outlined">
+                                    <Chip
+                                        label={
+                                            <Typography variant="h4" align="center" sx={0}>
+                                                OR
+                                            </Typography>
+                                        }
+                                        variant="outlined"
+                                    />
+                                </FormControl>
                             </Grid>
                             <Grid item>
                                 <FormControl sx={{ m: 1, width: '42ch' }} variant="outlined">
@@ -104,8 +154,8 @@ const WalletCard = ({ isLoading }) => {
                                 </FormControl>
                             </Grid>
                             <Grid item>
-                                <FormControl sx={{ m: 1, width: '42ch' }} variant="outlined">
-                                    <Button variant="contained" disableElevation onClick={connectWallet}>
+                                <FormControl sx={{ m: 2, width: '42ch' }} variant="outlined">
+                                    <Button variant="outlined" disableElevation onClick={connectWallet}>
                                         <Typography variant="h4">Connect Wallet</Typography>
                                     </Button>
                                 </FormControl>

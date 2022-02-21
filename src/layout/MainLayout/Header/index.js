@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 
 // project imports
 import LogoSection from '../LogoSection';
-import WalletSection from './WalletSection';
+// import WalletSection from './WalletSection';
 
 // ==============================|| MAIN NAVBAR / HEADER ||============================== //
 
@@ -29,7 +29,6 @@ const Header = () => {
             </Box>
 
             {/* wallet */}
-            <WalletSection />
 
             {/* header space */}
             <Box sx={{ flexGrow: 1 }} />

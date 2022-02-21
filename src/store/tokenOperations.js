@@ -1,12 +1,40 @@
 export const contractState = {
     tokens: [
         {
-            address: null,
-            close_date: null,
-            weights: null,
-            total_token_amount: null,
-            total_tezos_amount: null,
-            token_sale_is_open: null
+            token_address: 'first_address',
+            close_date: new Date('2014-08-18T21:11:54'),
+            input_weight: 38,
+            output_weight: 62,
+            total_token_amount: 23,
+            total_tezos_amount: 4,
+            token_sale_is_open: true
+        },
+        {
+            token_address: 'second_address',
+            close_date: new Date('2014-08-18T21:11:54'),
+            input_weight: 38,
+            output_weight: 62,
+            total_token_amount: 23,
+            total_tezos_amount: 4,
+            token_sale_is_open: true
+        },
+        {
+            token_address: 'third_address',
+            close_date: new Date('2014-08-18T21:11:54'),
+            input_weight: 38,
+            output_weight: 62,
+            total_token_amount: 23,
+            total_tezos_amount: 4,
+            token_sale_is_open: true
+        },
+        {
+            token_address: 'fourth_address',
+            close_date: new Date('2014-08-18T21:11:54'),
+            input_weight: 38,
+            output_weight: 62,
+            total_token_amount: 23,
+            total_tezos_amount: 4,
+            token_sale_is_open: true
         }
     ],
     wallet: {
@@ -23,9 +51,10 @@ const tokenOperations = (state = contractState, action) => {
             return [
                 ...state,
                 {
-                    address: null,
+                    token_address: null,
                     close_date: null,
-                    weights: null,
+                    input_weight: 38,
+                    output_weight: 62,
                     total_token_amount: null,
                     total_tezos_amount: null,
                     token_sale_is_open: null
@@ -37,9 +66,10 @@ const tokenOperations = (state = contractState, action) => {
             return [
                 ...state,
                 {
-                    address: null,
+                    token_address: null,
                     close_date: null,
-                    weights: null,
+                    input_weight: 38,
+                    output_weight: 62,
                     total_token_amount: null,
                     total_tezos_amount: null,
                     token_sale_is_open: null
