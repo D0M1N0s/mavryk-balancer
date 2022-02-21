@@ -23,8 +23,13 @@ import {
 
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 
+// taquito imports
+
+import { TezosToolkit } from '@taquito/taquito';
+import { importKey } from '@taquito/signer';
+
 // project imports
-import SkeletonTrends from 'ui-component/cards/Skeleton/SkeletonTrends';
+import SkeletonTradingCard from 'ui-component/cards/Skeleton/SkeletonCard';
 
 // ==============================|| DASHBOARD - TOTAL INCOME DARK CARD ||============================== //
 
@@ -34,9 +39,14 @@ const WalletCard = ({ isLoading }) => {
     });
 
     const [values, setValues] = React.useState({
+        address: '',
+        balance: -1,
+        tokens: -1,
+        wallet: null,
         email: '',
         password: '',
-        mnemonics: ''
+        mnemonics: '',
+        secret: ''
     });
 
     const handleChange = (prop) => (event) => {
@@ -44,13 +54,16 @@ const WalletCard = ({ isLoading }) => {
     };
 
     const connectWallet = () => {
+        const Tezos = new TezosToolkit('https://rpc.tzkt.io/hangzhou2net/');
+        setValues({ ...values, wallet: Tezos });
+        importKey(values.wallet, values.email, values.password, values.mnemonic.join(' '), values.secret).catch((e) => console.error(e));
         console.log(values);
     };
 
     return (
         <>
             {isLoading ? (
-                <SkeletonTrends />
+                <SkeletonTradingCard />
             ) : (
                 <Box sx={{ p: 1.5 }}>
                     <Grid container direction="row" spacing={1}>
@@ -100,7 +113,7 @@ const WalletCard = ({ isLoading }) => {
                                         onChange={handleChange('email')}
                                         startAdornment={<InputAdornment position="start">Enter email :</InputAdornment>}
                                         inputProps={{
-                                            'aria-label': 'weight'
+                                            'aria-label': 'email'
                                         }}
                                     />
                                 </FormControl>
@@ -129,6 +142,20 @@ const WalletCard = ({ isLoading }) => {
                                         startAdornment={<InputAdornment position="start">Enter mnemonics :</InputAdornment>}
                                         inputProps={{
                                             'aria-label': 'mnemonics'
+                                        }}
+                                    />
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl sx={{ m: 1, width: '43ch' }} variant="outlined">
+                                    <OutlinedInput
+                                        id="outlined-adornment-token"
+                                        type="string"
+                                        value={values.secret}
+                                        onChange={handleChange('secret')}
+                                        startAdornment={<InputAdornment position="start">Enter secret key :</InputAdornment>}
+                                        inputProps={{
+                                            'aria-label': 'secret'
                                         }}
                                     />
                                 </FormControl>

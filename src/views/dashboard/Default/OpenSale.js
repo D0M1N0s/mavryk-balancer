@@ -23,7 +23,7 @@ import {
 } from '@mui/material';
 
 // project imports
-import SkeletonTradingCard from 'ui-component/cards/Skeleton/SkeletonTradingCard';
+import SkeletonTradingCard from 'ui-component/cards/Skeleton/SkeletonCard';
 import store from 'store';
 
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //

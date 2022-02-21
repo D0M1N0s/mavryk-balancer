@@ -21,12 +21,8 @@ const Dashboard = () => {
         <Grid container direction="row" justifyContent="center" alignItems="center">
             <Grid item xs={12}>
                 <Grid container spacing={gridSpacing}>
-                    <Grid item lg={4} md={12} sm={12} xs={12}>
-                        <Grid container spacing={gridSpacing}>
-                            <Grid item sm={6} xs={12} md={6} lg={12}>
-                                <WalletCard isLoading={isLoading} />
-                            </Grid>
-                        </Grid>
+                    <Grid item lg={4} md={6} sm={6} xs={12}>
+                        <WalletCard isLoading={isLoading} />
                     </Grid>
                     <Grid item lg={4} md={6} sm={6} xs={12}>
                         <TradingCard isLoading={isLoading} />
