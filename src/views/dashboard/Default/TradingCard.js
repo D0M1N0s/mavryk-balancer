@@ -51,7 +51,7 @@ const TradingCard = ({ isLoading }) => {
                 <MainCard>
                     <Box sx={{ p: 1.5 }}>
                         <Grid container direction="column">
-                            <Grid item>
+                            <Grid item sx={{ m: 1.6, width: '43ch' }}>
                                 <Chip
                                     label={
                                         <Typography variant="h4" align="center" sx={0}>
@@ -61,8 +61,6 @@ const TradingCard = ({ isLoading }) => {
                                     variant="outlined"
                                 />
                             </Grid>
-                            <Divider />
-                            <Divider />
                             <Grid container direction="row" justifyContent="center" alignItems="stretch">
                                 <Grid item>
                                     <Select

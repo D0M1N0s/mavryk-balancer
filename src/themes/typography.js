@@ -8,47 +8,47 @@ export default function themeTypography(theme) {
         fontFamily: theme?.customization?.fontFamily,
         h6: {
             fontWeight: 500,
-            color: theme.heading,
+            color: '#fff',
             fontSize: '0.75rem'
         },
         h5: {
             fontSize: '0.875rem',
-            color: theme.heading,
+            color: '#fff',
             fontWeight: 500
         },
         h4: {
             fontSize: '1rem',
-            color: theme.heading,
+            color: '#fff',
             fontWeight: 600
         },
         h3: {
             fontSize: '1.25rem',
-            color: theme.heading,
+            color: '#fff',
             fontWeight: 600
         },
         h2: {
             fontSize: '1.5rem',
-            color: theme.heading,
+            color: '#fff',
             fontWeight: 700
         },
         h1: {
             fontSize: '2.125rem',
-            color: theme.heading,
+            color: '#fff',
             fontWeight: 700
         },
         subtitle1: {
             fontSize: '0.875rem',
             fontWeight: 500,
-            color: theme.textDark
+            color: '#fff'
         },
         subtitle2: {
             fontSize: '0.75rem',
             fontWeight: 400,
-            color: theme.darkTextSecondary
+            color: '#fff'
         },
         caption: {
             fontSize: '0.75rem',
-            color: theme.darkTextSecondary,
+            color: '#fff',
             fontWeight: 400
         },
         body1: {
@@ -60,10 +60,11 @@ export default function themeTypography(theme) {
             letterSpacing: '0em',
             fontWeight: 400,
             lineHeight: '1.5em',
-            color: theme.darkTextPrimary
+            color: '#fff'
         },
         button: {
-            textTransform: 'capitalize'
+            textTransform: 'capitalize',
+            color: '#334155'
         },
         customInput: {
             marginTop: 1,
@@ -71,7 +72,7 @@ export default function themeTypography(theme) {
             '& > label': {
                 top: 23,
                 left: 0,
-                color: theme.grey500,
+                color: '#fff',
                 '&[data-shrink="false"]': {
                     top: 5
                 }
@@ -83,16 +84,18 @@ export default function themeTypography(theme) {
                 display: 'none'
             },
             '& fieldset': {
+                color: '#fff',
                 top: 0
             }
         },
         mainContent: {
-            backgroundColor: theme.background,
+            backgroundColor: '#1e293c',
             width: '100%',
-            minHeight: 'calc(100vh - 88px)',
+            minHeight: 'calc(100vh - 120px)',
             flexGrow: 1,
             padding: '20px',
             marginTop: '88px',
+            marginBottom: '40px',
             marginRight: '20px',
             borderRadius: `${theme?.customization?.borderRadius}px`
         },

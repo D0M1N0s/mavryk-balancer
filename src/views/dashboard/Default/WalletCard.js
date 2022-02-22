@@ -69,7 +69,7 @@ const WalletCard = ({ isLoading }) => {
                 <MainCard>
                     <Box sx={{ p: 1.5 }}>
                         <Grid container direction="row" spacing={1}>
-                            <Grid container direction="row" justifyContent="start" alignItems="stretch" spacing={0}>
+                            <Grid container direction="column" justifyContent="start" alignItems="stretch" spacing={0}>
                                 <Grid item>
                                     <Chip
                                         label={
@@ -79,22 +79,16 @@ const WalletCard = ({ isLoading }) => {
                                         }
                                         variant="outlined"
                                     />
-                                    <Alert severity="info" sx={{ width: '43ch' }}>
-                                        <AlertTitle>
-                                            <Typography sx={{ m: 0.2 }} variant="h4">
-                                                Balance : 3453 ꜩ
-                                            </Typography>
-                                        </AlertTitle>
-                                    </Alert>
                                 </Grid>
                                 <Grid item>
-                                    <Alert severity="info" sx={{ width: '43ch' }}>
-                                        <AlertTitle>
-                                            <Typography sx={{ m: 0.2 }} variant="h4">
-                                                Token Balance : 34
-                                            </Typography>
-                                        </AlertTitle>
-                                    </Alert>
+                                    <Typography sx={{ m: 0.2 }} variant="h4">
+                                        Balance : 3453 ꜩ
+                                    </Typography>
+                                </Grid>
+                                <Grid item>
+                                    <Typography sx={{ m: 0.2 }} variant="h4">
+                                        Token Balance : 34
+                                    </Typography>
                                 </Grid>
                                 <Grid item>
                                     <Chip

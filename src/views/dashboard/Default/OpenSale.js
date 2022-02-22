@@ -74,17 +74,17 @@ const OpenSale = ({ isLoading }) => {
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
                         <Box sx={{ p: 1.5 }}>
                             <Grid container direction="column">
-                                <Grid container direction="row" justifyContent="start" alignItems="stretch">
-                                    <Grid item>
-                                        <Chip
-                                            label={
-                                                <Typography variant="h4" align="center" sx={0}>
-                                                    Open sale for your token :
-                                                </Typography>
-                                            }
-                                            variant="outlined"
-                                        />
-                                    </Grid>
+                                <Grid item sx={{ m: 1.5, width: '43ch' }}>
+                                    <Chip
+                                        label={
+                                            <Typography variant="h4" align="center" sx={2}>
+                                                Open sale for your token :
+                                            </Typography>
+                                        }
+                                        variant="outlined"
+                                    />
+                                </Grid>
+                                <Grid container direction="row" justifyContent="center" alignItems="stretch">
                                     <Divider />
                                     <Grid item>
                                         <FormControl sx={{ m: 1, width: '43ch' }} variant="outlined">
@@ -193,7 +193,6 @@ const OpenSale = ({ isLoading }) => {
                                         </FormControl>
                                     </Grid>
                                 </Grid>
-                                <Divider />
                             </Grid>
                         </Box>
                     </LocalizationProvider>

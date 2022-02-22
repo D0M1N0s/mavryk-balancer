@@ -5,21 +5,21 @@
 
 export default function themePalette(theme) {
     return {
-        mode: theme?.customization?.navType,
+        mode: 'dark',
         common: {
             black: theme.colors?.darkPaper
         },
         primary: {
             light: theme.colors?.primaryLight,
             main: theme.colors?.primaryMain,
-            dark: theme.colors?.primaryDark,
+            dark: '#fff',
             200: theme.colors?.primary200,
             800: theme.colors?.primary800
         },
         secondary: {
             light: theme.colors?.secondaryLight,
             main: theme.colors?.secondaryMain,
-            dark: theme.colors?.secondaryDark,
+            dark: '#fff',
             200: theme.colors?.secondary200,
             800: theme.colors?.secondary800
         },
