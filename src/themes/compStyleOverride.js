@@ -3,14 +3,18 @@ export default function componentStyleOverrides(theme) {
         MuiButton: {
             styleOverrides: {
                 root: {
+                    backgroundColor: '#334155',
                     fontWeight: 500,
                     borderRadius: '5px'
+                },
+                rounded: {
+                    borderRadius: `${theme?.customization?.borderRadius}px`
                 }
             }
         },
         MuiPaper: {
             defaultProps: {
-                elevation: 12
+                elevation: 15
             },
             styleOverrides: {
                 root: {
@@ -24,7 +28,7 @@ export default function componentStyleOverrides(theme) {
         MuiCardHeader: {
             styleOverrides: {
                 root: {
-                    color: theme.colors?.textDark,
+                    color: '#fff',
                     padding: '24px'
                 },
                 title: {
@@ -49,11 +53,11 @@ export default function componentStyleOverrides(theme) {
         MuiListItemButton: {
             styleOverrides: {
                 root: {
-                    color: '#334155',
+                    color: '#fff',
                     paddingTop: '10px',
                     paddingBottom: '10px',
                     '&.Mui-selected': {
-                        color: '#334155',
+                        color: '#fff',
                         backgroundColor: '#334155',
                         '&:hover': {
                             backgroundColor: theme.menuSelectedBack
@@ -118,6 +122,7 @@ export default function componentStyleOverrides(theme) {
                 input: {
                     fontWeight: 500,
                     background: '#334155',
+                    color: '#fff',
                     padding: '15.5px 14px',
                     borderRadius: `${theme?.customization?.borderRadius}px`,
                     '&.MuiInputBase-inputSizeSmall': {

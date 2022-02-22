@@ -125,11 +125,11 @@ const TradingCard = ({ isLoading }) => {
                                         sx={{
                                             width: '100%',
                                             maxWidth: 360,
-                                            bgcolor: 'background.paper',
+                                            bgcolor: '#334155',
                                             position: 'relative',
                                             overflow: 'auto',
                                             maxHeight: 300,
-                                            '& ul': { padding: 0 }
+                                            '& ul': { padding: 1 }
                                         }}
                                     >
                                         {store.getState().token.tokens.map((value) => (
