@@ -28,13 +28,13 @@ const getContract = async(Tezos, contract_address) => {
 
 const getAccounts = async () => {
     const Tezos = await createTezosFromHangzhou('../hangzhounet.json');
-    const Tezos2 = await createTezosFromHangzhou('../hangzhounet2.json');
+    const Tezos1 = await createTezosFromHangzhou('./accounts/buyer1.json');
+    const Tezos2 = await createTezosFromHangzhou('./accounts/buyer2.json');
+    const Tezos3 = await createTezosFromHangzhou('./accounts/buyer3.json');
     const tokensale_address = 'KT1PqZsey9vN7C6HwLjDuGnZcqdRCvqvZS7e';
     const fa12_address = 'KT1D2xH31FDDC5wcjugcMsgd9Mfp4LjvwLCs';
-    // const tokensale_contract = await Tezos.contract.at(tokensale_address);
-    // const standart_token_contract = await Tezos.contract.at(fa12_address);
-    
-    return { Tezos, Tezos2, tokensale_address, fa12_address}
+
+    return { Tezos, Tezos1, Tezos2, Tezos3, tokensale_address, fa12_address}
 }
 
 const get_full_storage = async (contract, token_address) => {
@@ -76,15 +76,14 @@ const buy_token = async(tokensale_contract, purchase_tezos_amount, fa12_address)
     console.log("Operation confirmed");
 }
 
-function storage_assert(initialStorage, tokensale_status, total_token_amount, total_tezos_amount, fa12_address, close_date, token_weight){
-    assert(initialStorage.token_sale_is_open == tokensale_status, `tokensale status: ${initialStorage.token_sale_is_open}; expected: ${tokensale_status}`)
-    assert(initialStorage.total_token_amount == to_float(total_token_amount), `total_token_amount: ${initialStorage.total_token_amount}; expected: ${to_float(total_token_amount)}`)
-    assert(initialStorage.total_tezos_amount == to_float(total_tezos_amount), `total_token_amount: ${initialStorage.total_tezos_amount}; expected: ${to_float(total_tezos_amount)}`)
-    assert(initialStorage.address == fa12_address, `token address: ${initialStorage.address}; expected: ${fa12_address}`)
-    // assert(initialStorage.close_date == close_date)
-    assert(initialStorage.weights.token_weight['c'][0] == to_float(token_weight))
-    assert(initialStorage.weights.tezos_weight['c'][0] == to_float(1) - to_float(token_weight))
-
+function storage_assert(storage, tokensale_status, total_token_amount, total_tezos_amount, fa12_address, close_date, token_weight){
+    assert(storage.token_sale_is_open == tokensale_status, `tokensale status: ${storage.token_sale_is_open}; expected: ${tokensale_status}`)
+    assert(storage.total_token_amount == to_float(total_token_amount), `total_token_amount: ${storage.total_token_amount}; expected: ${to_float(total_token_amount)}`)
+    assert(storage.total_tezos_amount == to_float(total_tezos_amount), `total_token_amount: ${storage.total_tezos_amount}; expected: ${to_float(total_tezos_amount)}`)
+    assert(storage.address == fa12_address, `token address: ${storage.address}; expected: ${fa12_address}`)
+    assert(storage.close_date == close_date, `close_date: ${storage.close_date}; expected: ${close_date}`)
+    assert(storage.weights.token_weight['c'][0] == to_float(token_weight), `token_weight: ${storage.weights.token_weight['c'][0]}; expected: ${token_weight}`)
+    assert(storage.weights.tezos_weight['c'][0] == to_float(1) - to_float(token_weight), `tezos_weight: ${storage.weights.tezos_weight['c'][0]}; expected: ${to_float(1) - to_float(token_weight)}`)
 }
 
 const test_open_twice = async () => {
@@ -94,7 +93,7 @@ const test_open_twice = async () => {
 
     const total_token_amount = 2;
     const total_tezos_amount = 4;
-    const close_date = "2022-01-01T00:01:30Z";
+    const close_date = "2022-01-01T00:01:30.000Z";
     const token_weight = 0.7;
 
     await approve_transfer(standart_token_contract, tokensale_address, 0)
@@ -128,7 +127,7 @@ const test_close_closed = async() => {
     
     const total_token_amount = 2;
     const total_tezos_amount = 4;
-    const close_date = "2022-01-01T00:01:30Z";
+    const close_date = "2022-01-01T00:01:30.000Z";
     const token_weight = 0.7;
 
     await approve_transfer(standart_token_contract, tokensale_address, 0)
@@ -154,62 +153,19 @@ const test_close_closed = async() => {
     storage_assert(storage, false, total_token_amount, total_tezos_amount, fa12_address, close_date, token_weight);
 }
 
-function mul(a, b) {
-    return Math.floor(a * b / c_PRECISION)
-}
-
-function div(a, b) {
-    return Math.floor((a * c_PRECISION) / b)
-}
-
-function pow_float_into_nat(a , power) {
-    if (power == 0) {
-        return c_PRECISION;
-    }
-    let root = pow_float_into_nat(a, Math.floor(power / 2));
-    let result = mul(root, root);
-    if (power % 2 == 1) {
-        result = mul(a, result)
-    }
-    return result
-}
-
-function approx_pow_float(base, alpha, steps = 2000) {
-    let term = 1 * c_PRECISION
-    let res = 0
-    for (let n = 1; n <= steps; ++n) {
-        res += term
-        let m = mul(alpha - (n - 1) * c_PRECISION, base - 1 * c_PRECISION)
-        m = div(m, n * c_PRECISION)
-        term = mul(term, m)
-    }
-    return res
-}
-
-function pow_floats(a, power){
-    const mul1 = pow_float_into_nat(a, power / c_PRECISION)
-    const mul2 = approx_pow_float(a, power % c_PRECISION)
-    const res = mul(mul1, mul2)
-    return res
-}
-
 function get_token_amount(reserve_token_i, reserve_token_o, delta_token_i, weight_i, weight_o) {
-    const fraction = div(reserve_token_i, (reserve_token_i + delta_token_i))
-    const power = div(weight_i, weight_o)
-    const fraction_root = pow_floats(fraction, power)
-    const sub_res = 1 * c_PRECISION - fraction_root
-    const delta_token_o = mul(reserve_token_o, sub_res)
-    return delta_token_o
+    const delta_token_o = reserve_token_o * (1 - (reserve_token_i / (reserve_token_i + delta_token_i)) ** (weight_i / weight_o))
+    return Math.floor(delta_token_o)
 }
 
 const test_token_purchase = async() => {
-    const {Tezos, Tezos2, tokensale_address, fa12_address} = await getAccounts();
+    const {Tezos, tokensale_address, fa12_address} = await getAccounts();
     const tokensale_contract = await getContract(Tezos, tokensale_address);
     const standart_token_contract = await getContract(Tezos, fa12_address);
     
     let total_token_amount = 2000;
     let total_tezos_amount = 40;
-    let close_date = "2022-01-01T00:01:30Z";
+    let close_date = "2022-01-01T00:01:30.000Z";
     let token_weight = 0.7;
     let purchase_tezos_amount = 10;
 
@@ -240,7 +196,7 @@ const test_invalid_token = async() => {
 
     const total_token_amount = 2;
     const total_tezos_amount = 4;
-    const close_date = "2022-01-01T00:01:30Z";
+    const close_date = "2022-01-01T00:01:30.000Z";
     const token_weight = 0.7;
     
     let thrown = false;
@@ -269,13 +225,13 @@ const test_purchuase_non_existing_token = async() => {
 }
 
 const test_purchuase_after_closure = async() => {
-    const {Tezos, Tezos2, tokensale_address, fa12_address} = await getAccounts();
+    const {Tezos, tokensale_address, fa12_address} = await getAccounts();
     const tokensale_contract = await getContract(Tezos, tokensale_address);
     const standart_token_contract = await getContract(Tezos, fa12_address);
     
     let total_token_amount = 2000;
     let total_tezos_amount = 40;
-    let close_date = "2022-01-01T00:01:30Z";
+    let close_date = "2022-01-01T00:01:30.000Z";
     let token_weight = 0.7;
     let purchase_tezos_amount = 10;
 
@@ -300,6 +256,40 @@ const test_purchuase_after_closure = async() => {
     }
     assert(thrown)
 }
+const test_many_purchasings = async() => {
+    const {Tezos, Tezos1, tokensale_address, fa12_address} = await getAccounts();
+    const tokensale = await getContract(Tezos, tokensale_address);
+    const tokensale1 = await getContract(Tezos1, tokensale_address);
+    const standart_token_contract = await getContract(Tezos, fa12_address);
+    
+    let total_token_amount = 2000;
+    let total_tezos_amount = 40;
+    let close_date = "2022-01-01T00:01:30.000Z";
+    let token_weight = 0.7;
+    let purchase_tezos = [10, 14, 87, 7]
+
+    await approve_transfer(standart_token_contract, tokensale_address, 0)
+    await approve_transfer(standart_token_contract, tokensale_address, total_token_amount)
+    await open_sale(tokensale, fa12_address, total_token_amount, total_tezos_amount, close_date, token_weight);
+    await approve_transfer(standart_token_contract, tokensale_address, 0)
+    var storage = await get_full_storage(tokensale, fa12_address);
+    storage_assert(storage, true, total_token_amount, total_tezos_amount, fa12_address, close_date, token_weight);
+    
+    for (let i = 0; i < 4; ++i) {
+        let purchase_tezos_amount = purchase_tezos[i]
+        await buy_token(tokensale1, purchase_tezos_amount, fa12_address)
+        var storage = await get_full_storage(tokensale1, fa12_address);
+        const correct_delta_tokens = get_token_amount(to_float(total_tezos_amount), to_float(total_token_amount), to_float(purchase_tezos_amount), to_float(1) - to_float(token_weight), to_float(token_weight))
+        total_token_amount -= to_number(correct_delta_tokens)
+        total_tezos_amount += purchase_tezos_amount
+        storage_assert(storage, true, total_token_amount, total_tezos_amount, fa12_address, close_date, token_weight)
+    }
+
+    await close_sale(tokensale, fa12_address);
+    storage = await get_full_storage(tokensale, fa12_address);
+    storage_assert(storage, false, total_token_amount, total_tezos_amount, fa12_address, close_date, token_weight);
+}
+
 
 const execute_tests = async () => {
     const tests = [
@@ -309,6 +299,7 @@ const execute_tests = async () => {
          () => test_invalid_token(),
          () => test_purchuase_non_existing_token(),
          () => test_purchuase_after_closure(),
+         () => test_many_purchasings(),
     ];
     for (let test of tests) {
         await test()
