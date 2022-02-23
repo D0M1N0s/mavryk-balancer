@@ -50,10 +50,10 @@ function open_sale( var token_address : address; // think, that issuer's account
         total_tezos_amount = total_tezos_amount;  // stores the amount of tezos laying on the contract's address
         token_sale_is_open = True;
     ];
-    const token_contract : contract(entryAction) =
-      case (Tezos.get_contract_opt(token_address) : option (contract (entryAction))) of
+    const token_contract : contract(transferType) =
+      case (Tezos.get_entrypoint_opt("%transfer", token_address) : option (contract (transferType))) of
         Some (contract) -> contract
-        | None -> (failwith ("Contract for this token not found.") : contract (entryAction))
+        | None -> (failwith ("Contract for this token not found.") : contract (transferType))
       end;
 
     var tsx : list(transfer_destination) := list[record[
@@ -61,10 +61,10 @@ function open_sale( var token_address : address; // think, that issuer's account
                 to_ = Tezos.self_address; 
                 token_id = 0n]];
 
-    var transfer_param : list(transfer) := list [record[
+    var transfer_param : transferType := list [record[
                 from_ = Tezos.sender; 
                 txs = tsx]]; 
-    const op : operation = Tezos.transaction (Transfer(transfer_param), 0mutez, token_contract);
+    const op : operation = Tezos.transaction(transfer_param, 0mutez, token_contract);
     const operations : list (operation) = list [op];
   } with (operations, store)
 
@@ -92,10 +92,10 @@ function buy_token (var tezos_amnt : nat; var token_address : address; var store
       if not cur_token.token_sale_is_open then block {
         failwith("Tokensale is closed");
       } else skip;
-      const token_contract : contract(entryAction) =
-      case (Tezos.get_contract_opt(token_address) : option (contract (entryAction))) of
-          Some (contract) -> contract
-          | None -> (failwith ("Contract for this token not found.") : contract (entryAction))
+      const token_contract : contract(transferType) =
+      case (Tezos.get_entrypoint_opt("%transfer", token_address) : option (contract (transferType))) of
+        Some (contract) -> contract
+        | None -> (failwith ("Contract for this token not found.") : contract (transferType))
       end;
       var token_w : float := abs (cur_token.weights.0);
       var tezos_w : float := abs (cur_token.weights.1);
@@ -115,7 +115,7 @@ function buy_token (var tezos_amnt : nat; var token_address : address; var store
                 from_ = Tezos.self_address; 
                 txs = tsx]]; 
       
-      const op : operation = Tezos.transaction (Transfer(transfer_param), 0tez, token_contract);
+      const op : operation = Tezos.transaction (transfer_param, 0tez, token_contract);
       const operations : list (operation) = list [op];
       
       cur_token.total_token_amount := abs(cur_token.total_token_amount - token_amnt * c_PRECISION);
