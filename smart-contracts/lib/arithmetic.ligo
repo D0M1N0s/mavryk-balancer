@@ -1,4 +1,5 @@
 const c_PRECISION : nat = 10_000_000_000n; // 10 ** 10
+const c_PRECISION_ORDER : nat = 10n;
 
 function mul(var a : int; var b : int) : int is 
     block {
@@ -12,6 +13,21 @@ function div(var a : int; var b : int) : int is
         var up : int := a * c_PRECISION;
         var res : int := up /  b;
     } with res
+
+
+function pow(var a : nat; var power : nat) : nat is 
+    block {
+        var res : nat := 1n;
+        var powered_a : nat := a;
+        while power > 0n block {
+            if power mod 2n = 1n 
+                then res := res * powered_a;
+            else skip;
+            powered_a := powered_a * powered_a;
+            power := power / 2n;
+        }
+    } with res
+
 
 function add_floats(var a : nat; var b : nat) : nat is
     block {
