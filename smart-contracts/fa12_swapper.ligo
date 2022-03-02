@@ -146,7 +146,7 @@ function close_sale (var token_address : address; var store : storage) : returnT
 
 function main (var action : balancerEntrypoint; var store : storage): returnType is
     case action of
-        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, param.5, param.5, store)
+        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, param.5, param.6, store)
         | BuyToken (param) -> buy_token(param.0, param.1, store)
         | CloseSale (param) -> close_sale (param, store)
     end
