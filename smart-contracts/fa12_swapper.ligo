@@ -55,7 +55,7 @@ function open_sale( var token_address : address;
         total_based_asset_amount = total_based_asset_amount;  // stores the amount of tezos laying on the contract's address
         token_sale_is_open = True;
         token_decimals = token_decimals;
-        based_asset_decimals = token_decimals;
+        based_asset_decimals = based_asset_decimals;
     ];
     const token_contract : contract(entryAction) =
       case (Tezos.get_contract_opt(token_address) : option (contract (entryAction))) of
@@ -99,11 +99,11 @@ function buy_token (var base_asset_amnt : nat; var token_address : address; var 
       end;
       var token_w : float := abs (cur_token.weights.0);
       var base_asset_w : float := abs (cur_token.weights.1);
-      var tez_reserve : float := cur_token.total_based_asset_amount;
+      var base_asset_reserve : float := cur_token.total_based_asset_amount;
       var token_reserve : float := cur_token.total_token_amount;
-      var delta_token := get_token_amount(tez_reserve, token_reserve,  base_asset_amnt, base_asset_w, token_w);
+      var delta_token := get_token_amount(base_asset_reserve, token_reserve,  base_asset_amnt, base_asset_w, token_w);
 
-      var power : int := c_PRECISION_ORDER - cur_token.based_asset_decimals;
+      var power : int := c_PRECISION_ORDER - cur_token.token_decimals;
       var divisor : nat := pow(10n, abs(power));
       var token_amnt := delta_token;
       if power > 0 then
