@@ -2,22 +2,25 @@
 #include "lib/arithmetic.ligo"
 
 type float is nat
-type weights_t is michelson_pair(int, "token_weight", int, "tezos_weight")
+type weights_t is michelson_pair(int, "token_weight", int, "base_asset_weight")
 
 type token is record [
     address : address;
     close_date : timestamp;
 	  weights : weights_t;  // stored as (number * c_PRECISION, number * c_PRECISION)
 	  total_token_amount : float; // stored as number * c_PRECISION
-    total_tezos_amount : float; // stored as number * c_PRECISION
+    total_based_asset_amount : float; // stored as number * c_PRECISION
     token_sale_is_open : bool;
+    token_id : nat;
+    token_decimals : nat;
+    based_asset_decimals : nat;
 ]
 
 type storage is big_map (address, token)
 
 type buyTokenParameter is nat * address
 type closeSaleParameter is address
-type openSaleParameter is  address * float * float * timestamp * weights_t
+type openSaleParameter is  address * float * float * timestamp * weights_t * nat * nat * nat
 
 type balancerEntrypoint is
     | OpenSale of openSaleParameter
@@ -29,9 +32,12 @@ type returnType is list (operation) * storage
 
 function open_sale( var token_address : address; // think, that issuer's account call this contract, so Tezos.sender != standart_contract_address  
                     var total_token_amount : float;
-                    var total_tezos_amount : float;
+                    var total_based_asset_amount : float;
                     var close_date : timestamp; 
-                    var weights: weights_t;  
+                    var weights: weights_t;
+                    var token_id : nat;
+                    var token_decimals : nat;
+                    var based_asset_decimals : nat;
                     var store : storage)  
                     : returnType is
   block {
@@ -47,8 +53,11 @@ function open_sale( var token_address : address; // think, that issuer's account
         close_date  = close_date;
         weights = weights;
         total_token_amount = total_token_amount;
-        total_tezos_amount = total_tezos_amount;  // stores the amount of tezos laying on the contract's address
+        total_based_asset_amount = total_based_asset_amount;  // stores the amount of tezos laying on the contract's address
         token_sale_is_open = True;
+        token_id = token_id;
+        token_decimals = token_decimals;
+        based_asset_decimals = based_asset_decimals;
     ];
     const token_contract : contract(transferType) =
       case (Tezos.get_entrypoint_opt("%transfer", token_address) : option (contract (transferType))) of
@@ -59,7 +68,7 @@ function open_sale( var token_address : address; // think, that issuer's account
     var tsx : list(transfer_destination) := list[record[
                 amount = total_token_amount / c_PRECISION; 
                 to_ = Tezos.self_address; 
-                token_id = 0n]];
+                token_id = token_id]];
 
     var transfer_param : transferType := list [record[
                 from_ = Tezos.sender; 
@@ -83,7 +92,7 @@ function get_token_amount   ( var reserve_token_i : float;
         var delta_token_o : float := mul_floats(reserve_token_o, sub_res);
     } with delta_token_o;
   
-function buy_token (var tezos_amnt : nat; var token_address : address; var store : storage) : returnType is
+function buy_token (var base_asset_amnt : nat; var token_address : address; var store : storage) : returnType is
   block {
       var cur_token : token := case store[token_address] of
         | Some(val) -> val
@@ -98,18 +107,25 @@ function buy_token (var tezos_amnt : nat; var token_address : address; var store
         | None -> (failwith ("Contract for this token not found.") : contract (transferType))
       end;
       var token_w : float := abs (cur_token.weights.0);
-      var tezos_w : float := abs (cur_token.weights.1);
-      var tez_reserve : float := cur_token.total_tezos_amount;
+      var base_asset_w : float := abs (cur_token.weights.1);
+      var base_asset_reserve : float := cur_token.total_based_asset_amount;
       var token_reserve : float := cur_token.total_token_amount;
-      var delta_token := get_token_amount(tez_reserve, token_reserve,  tezos_amnt, tezos_w, token_w);
-      var token_amnt := delta_token / c_PRECISION;
+      var delta_token := get_token_amount(base_asset_reserve, token_reserve,  base_asset_amnt, base_asset_w, token_w);
+      
+      var power : int := c_PRECISION_ORDER - cur_token.token_decimals;
+      var divisor : nat := pow(10n, abs(power));
+      var token_amnt := delta_token;
+      if power > 0 then
+        token_amnt := token_amnt / divisor;
+      else
+        token_amnt := token_amnt * divisor;
       
       var reciever : address := Tezos.sender; // hmm, the function to buy will be called from which address?
 
       var tsx : list(transfer_destination) := list[record[
                 amount = token_amnt; 
                 to_ = reciever; 
-                token_id = 0n]];    // ?????
+                token_id = cur_token.token_id]];
 
       var transfer_param : list(transfer) := list [record[
                 from_ = Tezos.self_address; 
@@ -118,8 +134,12 @@ function buy_token (var tezos_amnt : nat; var token_address : address; var store
       const op : operation = Tezos.transaction (transfer_param, 0tez, token_contract);
       const operations : list (operation) = list [op];
       
-      cur_token.total_token_amount := abs(cur_token.total_token_amount - token_amnt * c_PRECISION);
-      cur_token.total_tezos_amount := cur_token.total_tezos_amount + tezos_amnt;
+      if power > 0 then
+        token_amnt := token_amnt * divisor;
+      else
+        token_amnt := token_amnt / divisor;
+      cur_token.total_token_amount := abs(cur_token.total_token_amount - token_amnt);
+      cur_token.total_based_asset_amount := cur_token.total_based_asset_amount + base_asset_amnt;
       store[token_address] := cur_token;
   } with (operations, store)
     
@@ -143,7 +163,7 @@ function close_sale (var token_address : address; var store : storage) : returnT
 
 function main (var action : balancerEntrypoint; var store : storage): returnType is
     case action of
-        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, store)
+        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, param.5, param.6, param.7, store)
         | BuyToken (param) -> buy_token(param.0, param.1, store)
         | CloseSale (param) -> close_sale (param, store)
     end
