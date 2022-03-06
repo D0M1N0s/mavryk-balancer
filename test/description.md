@@ -1,0 +1,1 @@
+### This folder contains tests for tokensale smart contracts in Hangzhou2net
