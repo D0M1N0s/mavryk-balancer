@@ -1,0 +1,1 @@
+### This folder contains scripts for compilation and deployement tokensale smart contracts.
