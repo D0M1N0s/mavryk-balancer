@@ -27,6 +27,59 @@ import store from 'store';
 import MainCard from 'ui-component/cards/MainCard';
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
 
+const C_PRECISION = 10 ** 10;
+function Mul(a, b) {
+    return Math.floor((a * b) / C_PRECISION);
+}
+function Div(a, b) {
+    return Math.floor((a * C_PRECISION) / b);
+}
+function PowFloatIntoNat(a, power) {
+    if (power === 0) {
+        return C_PRECISION;
+    }
+    const root = PowFloatIntoNat(a, Math.floor(power / 2));
+    let result = Mul(root, root);
+    if (power % 2 === 1) {
+        result = Mul(a, result);
+    }
+    return result;
+}
+function ApproxPowFloat(base, alpha, steps = 2000) {
+    let term = 1 * C_PRECISION;
+    let res = 0;
+    for (let n = 1; n <= steps; n += 1) {
+        res += term;
+        let m = Mul(alpha - (n - 1) * C_PRECISION, base - 1 * C_PRECISION);
+        m = Div(m, n * C_PRECISION);
+        term = Mul(term, m);
+    }
+    return res;
+}
+
+function PowFloats(a, power) {
+    const mul1 = PowFloatIntoNat(a, power / C_PRECISION);
+    const mul2 = ApproxPowFloat(a, power % C_PRECISION);
+    const res = Mul(mul1, mul2);
+    return res;
+}
+// Dublicates the AMM algo
+// Returns the recieved by user amount of tokens multiplyed by C_PRECISION
+// To get "normal" delta need to use FromFloatToNumber with necessary decimals of issuer's token
+function GetTokenAmount(reserveTokenI, reserveTokenO, deltaTokenI, weightI, weightO) {
+    const fraction = Div(reserveTokenI, reserveTokenI + deltaTokenI);
+    const power = Div(weightI, weightO);
+    const fractionRoot = PowFloats(fraction, power);
+    const subRes = 1 * C_PRECISION - fractionRoot;
+    const deltaTokenO = Mul(reserveTokenO, subRes);
+    return deltaTokenO;
+}
+function FromFloatToNumber(value, decimals) {
+    const multiplyer = 10 ** decimals;
+    const num = Math.floor((multiplyer * value) / C_PRECISION);
+    return num / multiplyer;
+}
+
 const TradingCard = ({ isLoading }) => {
     const [values, setValues] = React.useState({
         input: 0,
