@@ -29,6 +29,8 @@ export default function AlertDialogSlide() {
     const Input = styled('input')({
         display: 'none'
     });
+    // const updateBalance = async () => {
+    // };
 
     const [values, setValues] = React.useState({
         address: '',
