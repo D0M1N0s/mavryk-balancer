@@ -16,12 +16,14 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 import { TezosToolkit } from '@taquito/taquito';
 import { importKey } from '@taquito/signer';
+import { BeaconWallet } from '@taquito/beacon-wallet';
 
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
 import store from 'store';
 
 const Transition = React.forwardRef((props, ref) => <Slide direction="up" ref={ref} {...props} />);
+const Tezos = new TezosToolkit('https://rpc.tzkt.io/hangzhou2net/');
 
 export default function AlertDialogSlide() {
     const Input = styled('input')({
@@ -52,16 +54,20 @@ export default function AlertDialogSlide() {
         setOpen(false);
     };
 
-    const connectWallet = () => {
-        // This function gets the information
-        const Tezos = new TezosToolkit('https://rpc.tzkt.io/hangzhou2net/');
-        Tezos.contract
-            .at('KT1PqZsey9vN7C6HwLjDuGnZcqdRCvqvZS7e')
-            .then((c) => c.storage())
-            .then((s) => s.get('KT1LDjRzueHme3nDQGC9irB7MtWDVstm3ebC').then(console.log).catch(console.error));
-        console.log(values);
-        console.log(store.getState());
-        handleClose();
+    const connectWallet = async () => {
+        const options = {
+            name: 'TokensaleWallet'
+        };
+        try {
+            const wallet = new BeaconWallet(options);
+            await wallet.requestPermissions({ network: { type: 'hangzhounet' } });
+            await Tezos.setWalletProvider(wallet);
+            values.wallet = wallet;
+            values.address = await wallet.getPKH();
+            console.log(wallet);
+        } catch (exeption) {
+            console.log(exeption);
+        }
     };
 
     return (
@@ -86,7 +92,7 @@ export default function AlertDialogSlide() {
                 </Grid>
                 <Grid item>
                     <FormControl sx={{ width: '100%' }} variant="outlined">
-                        <Button variant="outlined" disableElevation onClick={handleClickOpen}>
+                        <Button variant="outlined" disableElevation onClick={connectWallet}>
                             <Typography variant="h4">Connect Wallet</Typography>
                         </Button>
                     </FormControl>
@@ -99,7 +105,7 @@ export default function AlertDialogSlide() {
                 onClose={handleClose}
                 aria-describedby="alert-dialog-slide-description"
             >
-                <DialogContent>
+                {/* <DialogContent>
                     <Box sx={{ p: 1.5 }}>
                         <Grid container direction="row" spacing={1}>
                             <Grid container direction="column" justifyContent="start" alignItems="stretch" spacing={0}>
@@ -197,7 +203,7 @@ export default function AlertDialogSlide() {
                             <Divider />
                         </Grid>
                     </Box>
-                </DialogContent>
+                </DialogContent> */}
             </Dialog>
         </MainCard>
     );
