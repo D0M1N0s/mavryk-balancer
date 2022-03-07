@@ -27,7 +27,7 @@ import SkeletonTradingCard from 'ui-component/cards/Skeleton/SkeletonCard';
 import store from 'store';
 import MainCard from 'ui-component/cards/MainCard';
 
-// ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
+// ===========================|| DASHBOARD DEFAULT - Open Sale ||=========================== //
 
 const OpenSale = ({ isLoading }) => {
     const inputRange = [...Array(101).keys()];

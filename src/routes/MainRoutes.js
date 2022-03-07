@@ -5,7 +5,8 @@ import MainLayout from 'layout/MainLayout';
 import Loadable from 'ui-component/Loadable';
 
 // dashboard routing
-const DashboardDefault = Loadable(lazy(() => import('views/dashboard/Default')));
+const DashboardSell = Loadable(lazy(() => import('views/dashboard/Sell')));
+const DashboardBuy = Loadable(lazy(() => import('views/dashboard/Buy')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -15,7 +16,15 @@ const MainRoutes = {
     children: [
         {
             path: '/',
-            element: <DashboardDefault />
+            element: <DashboardBuy />
+        },
+        {
+            path: '/buy',
+            element: <DashboardBuy />
+        },
+        {
+            path: '/sell',
+            element: <DashboardSell />
         }
     ]
 };

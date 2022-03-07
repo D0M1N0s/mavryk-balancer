@@ -1,25 +1,14 @@
-import PropTypes from 'prop-types';
 import * as React from 'react';
 
 // style
 
 import { styled } from '@mui/material/styles';
 
-// material-ui
-import {
-    Box,
-    Grid,
-    Alert,
-    AlertTitle,
-    Typography,
-    OutlinedInput,
-    Divider,
-    FormControl,
-    InputAdornment,
-    Button,
-    Chip,
-    IconButton
-} from '@mui/material';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import Slide from '@mui/material/Slide';
+
+import { Box, Grid, Typography, OutlinedInput, Divider, FormControl, InputAdornment, Button, Chip, IconButton } from '@mui/material';
 
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 
@@ -29,12 +18,12 @@ import { TezosToolkit } from '@taquito/taquito';
 import { importKey } from '@taquito/signer';
 
 // project imports
-import SkeletonTradingCard from 'ui-component/cards/Skeleton/SkeletonCard';
 import MainCard from 'ui-component/cards/MainCard';
+import store from 'store';
 
-// ==============================|| DASHBOARD - TOTAL INCOME DARK CARD ||============================== //
+const Transition = React.forwardRef((props, ref) => <Slide direction="up" ref={ref} {...props} />);
 
-const WalletCard = ({ isLoading }) => {
+export default function AlertDialogSlide() {
     const Input = styled('input')({
         display: 'none'
     });
@@ -53,52 +42,71 @@ const WalletCard = ({ isLoading }) => {
     const handleChange = (prop) => (event) => {
         setValues({ ...values, [prop]: event.target.value });
     };
+    const [open, setOpen] = React.useState(false);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
 
     const connectWallet = () => {
+        // This function gets the information
         const Tezos = new TezosToolkit('https://rpc.tzkt.io/hangzhou2net/');
-        setValues({ ...values, wallet: Tezos });
-        importKey(values.wallet, values.email, values.password, values.mnemonic.join(' '), values.secret).catch((e) => console.error(e));
+        Tezos.contract
+            .at('KT1PqZsey9vN7C6HwLjDuGnZcqdRCvqvZS7e')
+            .then((c) => c.storage())
+            .then((s) => s.get('KT1LDjRzueHme3nDQGC9irB7MtWDVstm3ebC').then(console.log).catch(console.error));
         console.log(values);
+        console.log(store.getState());
+        handleClose();
     };
 
     return (
-        <>
-            {isLoading ? (
-                <SkeletonTradingCard />
-            ) : (
-                <MainCard>
+        <MainCard>
+            <Grid container direction="column" justifyContent="start" alignItems="stretch" spacing={1}>
+                <Grid item>
+                    <Grid container direction="row" justifyContent="space-between" alignItems="center">
+                        <Grid item>
+                            <Typography variant="h4" align="start" sx={0}>
+                                My Wallet :
+                            </Typography>
+                        </Grid>
+                        <Grid item>
+                            <Typography variant="h4" align="end" sx={0}>
+                                - XTZ
+                            </Typography>
+                        </Grid>
+                    </Grid>
+                </Grid>
+                <Grid item>
+                    <Divider dark />
+                </Grid>
+                <Grid item>
+                    <FormControl sx={{ width: '100%' }} variant="outlined">
+                        <Button variant="outlined" disableElevation onClick={handleClickOpen}>
+                            <Typography variant="h4">Connect Wallet</Typography>
+                        </Button>
+                    </FormControl>
+                </Grid>
+            </Grid>
+            <Dialog
+                open={open}
+                TransitionComponent={Transition}
+                keepMounted
+                onClose={handleClose}
+                aria-describedby="alert-dialog-slide-description"
+            >
+                <DialogContent>
                     <Box sx={{ p: 1.5 }}>
                         <Grid container direction="row" spacing={1}>
                             <Grid container direction="column" justifyContent="start" alignItems="stretch" spacing={0}>
                                 <Grid item>
-                                    <Chip
-                                        label={
-                                            <Typography variant="h4" align="center" sx={0}>
-                                                Wallet information :
-                                            </Typography>
-                                        }
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <Typography sx={{ m: 0.2 }} variant="h4">
-                                        Balance : 3453 ꜩ
+                                    <Typography variant="h4" align="center" sx={0}>
+                                        Connect your wallet :
                                     </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <Typography sx={{ m: 0.2 }} variant="h4">
-                                        Token Balance : 34
-                                    </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <Chip
-                                        label={
-                                            <Typography variant="h4" align="center" sx={0}>
-                                                Wallet information :
-                                            </Typography>
-                                        }
-                                        variant="outlined"
-                                    />
                                 </Grid>
                                 <Grid item>
                                     <FormControl sx={{ m: 1, width: '43ch' }} variant="outlined">
@@ -158,14 +166,16 @@ const WalletCard = ({ isLoading }) => {
                                 </Grid>
                                 <Grid item justifyContent="center">
                                     <FormControl sx={{ m: 1, width: '42ch' }} variant="outlined">
-                                        <Chip
-                                            label={
-                                                <Typography variant="h4" align="center" sx={0}>
-                                                    OR
-                                                </Typography>
-                                            }
-                                            variant="outlined"
-                                        />
+                                        <Divider>
+                                            <Chip
+                                                label={
+                                                    <Typography variant="h4" align="center" sx={0}>
+                                                        OR
+                                                    </Typography>
+                                                }
+                                                variant="outlined"
+                                            />
+                                        </Divider>
                                     </FormControl>
                                 </Grid>
                                 <Grid item>
@@ -178,7 +188,7 @@ const WalletCard = ({ isLoading }) => {
                                 </Grid>
                                 <Grid item>
                                     <FormControl sx={{ m: 2, width: '42ch' }} variant="outlined">
-                                        <Button variant="outlined" disableElevation onClick={connectWallet}>
+                                        <Button disableElevation onClick={connectWallet}>
                                             <Typography variant="h4">Connect Wallet</Typography>
                                         </Button>
                                     </FormControl>
@@ -187,14 +197,8 @@ const WalletCard = ({ isLoading }) => {
                             <Divider />
                         </Grid>
                     </Box>
-                </MainCard>
-            )}
-        </>
+                </DialogContent>
+            </Dialog>
+        </MainCard>
     );
-};
-
-WalletCard.propTypes = {
-    isLoading: PropTypes.bool
-};
-
-export default WalletCard;
+}

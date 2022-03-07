@@ -4,6 +4,7 @@ export default function componentStyleOverrides(theme) {
             styleOverrides: {
                 root: {
                     backgroundColor: '#334155',
+                    borderColor: '#334155',
                     fontWeight: 500,
                     borderRadius: '5px'
                 },
@@ -159,8 +160,8 @@ export default function componentStyleOverrides(theme) {
         MuiDivider: {
             styleOverrides: {
                 root: {
-                    borderColor: '#334155',
-                    opacity: 1
+                    borderColor: '#fff',
+                    opacity: 2
                 }
             }
         },

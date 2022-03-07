@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 
 // project imports
 import LogoSection from '../LogoSection';
+import RouterTab from './RouterTab';
 // import WalletSection from './WalletSection';
 
 // ==============================|| MAIN NAVBAR / HEADER ||============================== //
@@ -23,15 +24,14 @@ const Header = () => {
                     }
                 }}
             >
-                <Box component="span" sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 1 }}>
+                <Box component="span" sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 0 }}>
                     <LogoSection />
                 </Box>
             </Box>
-
             {/* wallet */}
-
+            <RouterTab />
             {/* header space */}
-            <Box sx={{ flexGrow: 1 }} />
+            <Box sx={{ flexGrow: 2 }} />
         </>
     );
 };

@@ -2,7 +2,7 @@ export const contractState = {
     tokens: [
         {
             token_address: 'first_address',
-            close_date: new Date('2014-08-18T21:11:54'),
+            close_date: new Date('2024-08-18T21:11:54'),
             input_weight: 38,
             output_weight: 62,
             total_token_amount: 23,
@@ -11,7 +11,7 @@ export const contractState = {
         },
         {
             token_address: 'second_address',
-            close_date: new Date('2014-08-18T21:11:54'),
+            close_date: new Date('2025-08-18T21:11:54'),
             input_weight: 38,
             output_weight: 62,
             total_token_amount: 23,
@@ -20,7 +20,7 @@ export const contractState = {
         },
         {
             token_address: 'third_address',
-            close_date: new Date('2014-08-18T21:11:54'),
+            close_date: new Date('2026-08-18T21:11:54'),
             input_weight: 38,
             output_weight: 62,
             total_token_amount: 23,
@@ -29,7 +29,25 @@ export const contractState = {
         },
         {
             token_address: 'fourth_address',
-            close_date: new Date('2014-08-18T21:11:54'),
+            close_date: new Date('2029-08-18T21:11:54'),
+            input_weight: 38,
+            output_weight: 62,
+            total_token_amount: 23,
+            total_tezos_amount: 4,
+            token_sale_is_open: true
+        },
+        {
+            token_address: 'fith_address',
+            close_date: new Date('2023-08-18T21:11:54'),
+            input_weight: 38,
+            output_weight: 62,
+            total_token_amount: 23,
+            total_tezos_amount: 4,
+            token_sale_is_open: true
+        },
+        {
+            token_address: 'sixth_address',
+            close_date: new Date('2024-08-18T21:11:54'),
             input_weight: 38,
             output_weight: 62,
             total_token_amount: 23,
