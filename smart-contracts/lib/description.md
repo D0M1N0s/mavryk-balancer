@@ -1,0 +1,1 @@
+### This folder contains the library for arithmetic operations with float numbers, which are represented as float number multiplied by c_PRECISION. For instance, 1 is represented as c_PRECISION.
