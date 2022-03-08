@@ -8,8 +8,8 @@ type weights_t is michelson_pair(int, "token_weight", int, "base_asset_weight")
 type token is record [
     address : address;
     close_date : timestamp;
-	  weights : weights_t;  // stored as (number * c_PRECISION, number * c_PRECISION)
-	  total_token_amount : float; // stored as number * c_PRECISION
+    weights : weights_t;  // stored as (number * c_PRECISION, number * c_PRECISION)
+    total_token_amount : float; // stored as number * c_PRECISION
     total_based_asset_amount : float; // stored as number * c_PRECISION
     token_sale_is_open : bool;
     token_decimals : nat;
@@ -52,7 +52,7 @@ function open_sale( var token_address : address;
         close_date  = close_date;
         weights = weights;
         total_token_amount = total_token_amount;
-        total_based_asset_amount = total_based_asset_amount;  // stores the amount of tezos laying on the contract's address
+        total_based_asset_amount = total_based_asset_amount;
         token_sale_is_open = True;
         token_decimals = token_decimals;
         based_asset_decimals = based_asset_decimals;
@@ -63,7 +63,7 @@ function open_sale( var token_address : address;
         | None -> (failwith ("Contract for this token not found.") : contract (entryAction))
       end;
     
-    var transfer_param : transferParams := (Tezos.sender, ( Tezos.self_address, total_token_amount / c_PRECISION)); // to swap sender and reciever, but then doesn't work
+    var transfer_param : transferParams := (Tezos.sender, ( Tezos.self_address, total_token_amount / c_PRECISION));
     const op : operation = Tezos.transaction (Transfer(transfer_param), 0mutez, token_contract);
     const operations : list (operation) = list [op];
   } with (operations, store)

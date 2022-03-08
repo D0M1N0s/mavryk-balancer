@@ -7,8 +7,8 @@ type weights_t is michelson_pair(int, "token_weight", int, "base_asset_weight")
 type token is record [
     address : address;
     close_date : timestamp;
-	  weights : weights_t;  // stored as (number * c_PRECISION, number * c_PRECISION)
-	  total_token_amount : float; // stored as number * c_PRECISION
+    weights : weights_t;  // stored as (number * c_PRECISION, number * c_PRECISION)
+    total_token_amount : float; // stored as number * c_PRECISION
     total_based_asset_amount : float; // stored as number * c_PRECISION
     token_sale_is_open : bool;
     token_id : nat;
@@ -30,7 +30,7 @@ type balancerEntrypoint is
 type returnType is list (operation) * storage
 
 
-function open_sale( var token_address : address; // think, that issuer's account call this contract, so Tezos.sender != standart_contract_address  
+function open_sale( var token_address : address;  
                     var total_token_amount : float;
                     var total_based_asset_amount : float;
                     var close_date : timestamp; 
@@ -53,7 +53,7 @@ function open_sale( var token_address : address; // think, that issuer's account
         close_date  = close_date;
         weights = weights;
         total_token_amount = total_token_amount;
-        total_based_asset_amount = total_based_asset_amount;  // stores the amount of tezos laying on the contract's address
+        total_based_asset_amount = total_based_asset_amount;
         token_sale_is_open = True;
         token_id = token_id;
         token_decimals = token_decimals;
