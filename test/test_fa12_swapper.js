@@ -7,6 +7,7 @@ const fs = require("fs");
 const RPC = 'https://rpc.tzkt.io/hangzhou2net/'
 const { address } = JSON.parse(fs.readFileSync("../deployed/fa12-latest.json").toString())
 const c_PRECISION = 10000000000;
+const eps = 5;
 
 function  to_float(value) {
     return Math.floor(value * c_PRECISION);
@@ -16,7 +17,9 @@ function  to_number(value, decimals) {
     let num = Math.floor((10 ** decimals) * value / c_PRECISION);
     return num / (10 ** decimals);
 }
-
+function equal(a, b) {
+    return Math.abs(a - b) / c_PRECISION < 10 ** (-eps);
+}
 const createTezosFromHangzhou = async (path) => {
     const Tezos = new TezosToolkit(RPC);
     const acc = require(path)
@@ -92,8 +95,8 @@ const buy_token = async(tokensale_contract, purchase_base_asset_amount, fa12_add
 
 function storage_assert(storage, tokensale_status, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight){
     assert(storage.token_sale_is_open == tokensale_status, `tokensale status: ${storage.token_sale_is_open}; expected: ${tokensale_status}`)
-    assert(storage.total_token_amount == to_float(total_token_amount), `total_token_amount: ${storage.total_token_amount}; expected: ${to_float(total_token_amount)}`)
-    assert(storage.total_based_asset_amount == to_float(total_base_asset_amount), `total_based_asset_amount: ${storage.total_base_asset_amount}; expected: ${to_float(total_base_asset_amount)}`)
+    assert(equal(storage.total_token_amount, to_float(total_token_amount)), `total_token_amount: ${storage.total_token_amount}; expected: ${to_float(total_token_amount)}`)
+    assert(equal(storage.total_based_asset_amount, to_float(total_base_asset_amount)), `total_based_asset_amount: ${storage.total_base_asset_amount}; expected: ${to_float(total_base_asset_amount)}`)
     assert(storage.address == fa12_address, `token address: ${storage.address}; expected: ${fa12_address}`)
     assert(storage.close_date == close_date, `close_date: ${storage.close_date}; expected: ${close_date}`)
     assert(storage.weights.token_weight['c'][0] == to_float(token_weight), `token_weight: ${storage.weights.token_weight['c'][0]}; expected: ${token_weight}`)
@@ -310,7 +313,7 @@ const test_many_purchasings = async() => {
     let total_base_asset_amount = 40;
     let purchase_base_asset = [10, 14, 87, 7];
     const {close_date, token_weight, token_decimals, asset_decimals} = await get_test_input();
-
+    
     await approve_transfer(standart_token_contract, tokensale_address, total_token_amount)
     await open_sale(tokensale, fa12_address, total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals);
     await approve_transfer(standart_token_contract, tokensale_address, 0)
@@ -319,10 +322,11 @@ const test_many_purchasings = async() => {
     
     for (let i = 0; i < 4; ++i) {
         let purchase_base_asset_amount = purchase_base_asset[i]
-        await buy_token(tokensale1, purchase_base_asset_amount, fa12_address)
-        var storage = await get_full_storage(tokensale1, fa12_address);
         const correct_delta_tokens = get_token_amount(to_float(total_base_asset_amount), to_float(total_token_amount), to_float(purchase_base_asset_amount), to_float(1) - to_float(token_weight), to_float(token_weight))
         console.log(correct_delta_tokens, to_number(correct_delta_tokens, token_decimals))
+        
+        await buy_token(tokensale1, purchase_base_asset_amount, fa12_address)
+        var storage = await get_full_storage(tokensale1, fa12_address);
         total_token_amount -= to_number(correct_delta_tokens, token_decimals)
         total_base_asset_amount += purchase_base_asset_amount
         storage_assert(storage, true, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight)
@@ -333,7 +337,6 @@ const test_many_purchasings = async() => {
     storage_assert(storage, false, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
 }
 
-
 const execute_tests = async () => {
     const tests = [
         () => test_open_twice(),
@@ -342,7 +345,7 @@ const execute_tests = async () => {
         () => test_invalid_token(),
         () => test_purchuase_non_existing_token(),
         () => test_purchuase_after_closure(),
-        // () => test_many_purchasings(), // precision troubles
+        () => test_many_purchasings(),
     ];
     for (let test of tests) {
         await test()
