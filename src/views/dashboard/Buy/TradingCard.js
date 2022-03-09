@@ -100,9 +100,22 @@ const TradingCard = ({ isLoading }) => {
         close_date: store.getState().tokens[0].close_date,
         exchange_rate: 'N/A'
     });
+    let exchangeRate = 1;
 
     const Completionist = () => <span>The tokensale is over!</span>;
     const remainingTime = values.close_date - Date.now();
+    const calculateExchangeRate = () => {
+        exchangeRate = FromFloatToNumber(
+            GetTokenAmount(
+                ToFloat(values.token_amount),
+                ToFloat(values.based_asset_amount),
+                ToFloat(1),
+                values.token_weight,
+                values.based_asset_weight
+            ),
+            20
+        );
+    };
 
     const renderer = ({ days, hours, minutes, seconds, completed }) => {
         if (completed) {
