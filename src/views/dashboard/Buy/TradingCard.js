@@ -97,24 +97,12 @@ const TradingCard = ({ isLoading }) => {
         based_asset_weight: store.getState().tokens[0].based_asset_weight,
         based_asset_address: store.getState().tokens[0].based_asset_name,
         based_asset_name: store.getState().tokens[0].based_asset_name,
-        close_date: store.getState().tokens[0].close_date
+        close_date: store.getState().tokens[0].close_date,
+        exchange_rate: 'N/A'
     });
-    let exchangeRate = 1;
 
     const Completionist = () => <span>The tokensale is over!</span>;
     const remainingTime = values.close_date - Date.now();
-    const calculateExchangeRate = () => {
-        exchangeRate = FromFloatToNumber(
-            GetTokenAmount(
-                ToFloat(values.token_amount),
-                ToFloat(values.based_asset_amount),
-                ToFloat(1),
-                values.token_weight,
-                values.based_asset_weight
-            ),
-            20
-        );
-    };
 
     const renderer = ({ days, hours, minutes, seconds, completed }) => {
         if (completed) {
@@ -137,23 +125,29 @@ const TradingCard = ({ isLoading }) => {
         setOpen(false);
     };
 
-    const handleClick = () => {
-        console.log(
+    const calculateExchangeRate = () => {
+        const exchangeRate = FromFloatToNumber(
             GetTokenAmount(
                 ToFloat(values.token_amount),
                 ToFloat(values.based_asset_amount),
-                ToFloat(values.token_input),
+                ToFloat(1),
                 values.token_weight,
                 values.based_asset_weight
-            )
+            ),
+            20
         );
-        calculateExchangeRate();
-        console.log(exchangeRate);
+        return exchangeRate;
+    };
+
+    const handleClick = () => {
+        console.log(values.token_input);
+        console.log(values.based_asset_input);
     };
 
     const handleListItemClick = (event, currentToken) => {
         console.log(currentToken);
         const token = store.getState().tokens.filter((token) => token.token_address === currentToken);
+        const rate = calculateExchangeRate();
         setValues({
             ...values,
             token_weight: token[0].token_weight,
@@ -162,7 +156,8 @@ const TradingCard = ({ isLoading }) => {
             based_asset_weight: token[0].based_asset_weight,
             based_asset_address: token[0].based_asset_address,
             based_asset_name: token[0].based_asset_name,
-            close_date: token[0].close_date
+            close_date: token[0].close_date,
+            exchange_rate: rate
         });
         store.dispatch({
             type: 'setToken',
@@ -174,26 +169,17 @@ const TradingCard = ({ isLoading }) => {
     };
 
     const handleChange = (prop) => (event) => {
-        if (prop === 'input_token_address') {
-            const token = store.getState().tokens.filter((token) => token.token_address === event.target.value);
-            setValues({
-                ...values,
-                token_address: event.target.value,
-                token_name: token[0].token_name,
-                close_date: token[0].close_sdate
-            });
-        } else {
-            const calculated = GetTokenAmount(
-                ToFloat(values.token_amount),
-                ToFloat(values.based_asset_amount),
-                ToFloat(values.token_input),
-                values.token_weight,
-                values.based_asset_weight
-            );
-            console.log(values);
-            console.log(values.token_input);
-            setValues({ ...values, based_asset_input: FromFloatToNumber(calculated, 20), [prop]: event.target.value });
-        }
+        const calculated = GetTokenAmount(
+            ToFloat(values.token_amount),
+            ToFloat(values.based_asset_amount),
+            ToFloat(event.target.value),
+            values.token_weight,
+            values.based_asset_weight
+        );
+        const final = FromFloatToNumber(calculated, 20);
+        const rate = calculateExchangeRate();
+        console.log(final);
+        setValues({ ...values, exchange_rate: rate, based_asset_input: final, [prop]: event.target.value });
     };
 
     return (
@@ -251,7 +237,7 @@ const TradingCard = ({ isLoading }) => {
                                 <Chip
                                     label={
                                         <Typography variant="h4" align="center">
-                                            XTZ / {values.token_name} exchange rate : {exchangeRate}
+                                            XTZ / {values.token_name} exchange rate : {values.exchange_rate}
                                         </Typography>
                                     }
                                     variant="outlined"

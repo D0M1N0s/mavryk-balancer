@@ -8,6 +8,8 @@ export const tokenState = [
         based_asset_amount: 15384,
         based_asset_address: 'first_asset_address',
         based_asset_name: 'first_asset_name',
+        token_dec: 0,
+        fa2: -1,
         sale: true,
         close_date: new Date('2024-08-18T21:11:54')
     },
@@ -20,6 +22,8 @@ export const tokenState = [
         based_asset_amount: 4,
         based_asset_address: 'second_asset_address',
         based_asset_name: 'second_asset_name',
+        token_dec: 0,
+        fa2: -1,
         sale: true,
         close_date: new Date('2025-08-18T21:11:54')
     },
@@ -32,6 +36,8 @@ export const tokenState = [
         based_asset_amount: 4,
         based_asset_address: 'third_asset_address',
         based_asset_name: 'third_asset_name',
+        token_dec: 0,
+        fa2: -1,
         sale: true,
         close_date: new Date('2026-08-18T21:11:54')
     },
@@ -44,6 +50,8 @@ export const tokenState = [
         based_asset_amount: 4,
         based_asset_address: 'fourth_asset_address',
         based_asset_name: 'fourth_asset_name',
+        token_dec: 0,
+        fa2: -1,
         sale: true,
         close_date: new Date('2027-08-18T21:11:54')
     },
@@ -56,6 +64,8 @@ export const tokenState = [
         based_asset_amount: 4,
         based_asset_address: 'fifth_asset_address',
         based_asset_name: 'fifth_asset_name',
+        token_dec: 0,
+        fa2: -1,
         sale: true,
         close_date: new Date('2028-08-18T21:11:54')
     },
@@ -68,6 +78,8 @@ export const tokenState = [
         based_asset_amount: 4,
         based_asset_address: 'sixth_asset_address',
         based_asset_name: 'sixth_asset_name',
+        token_dec: 0,
+        fa2: -1,
         sale: true,
         close_date: new Date('2029-08-18T21:11:54')
     }
