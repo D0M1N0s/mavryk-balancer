@@ -22,15 +22,32 @@ import store from 'store';
 const WalletCard = ({ isLoading }) => {
 
     const [values, setValues] = React.useState({
-        address: '',
-        balance: -1,
-        tokens: -1,
-        wallet: null,
-        email: '',
-        password: '',
-        mnemonics: '',
-        secret: ''
+        token_weight: '',
+        token_amount: '',
+        token_address: '',
+        token_name: '',
+        based_asset_weight: '',
+        based_asset_amount: '',
+        based_asset_address: '',
+        based_asset_name: '',
+		close_date: '',
     });
+
+	store.subscribe(() => {
+		const token = store.getState().tokens.filter((token) => token.token_address === store.getState().buy.token);
+		console.log(token[0].close_date)
+		setValues({
+			token_weight: token[0].token_weight,
+			token_amount: token[0].token_amount,
+			token_address: token[0].token_address,
+			token_name: token[0].token_name,
+			based_asset_weight: token[0].based_asset_weight,
+			based_asset_amount: token[0].based_asset_amount,
+			based_asset_address: token[0].based_asset_address,
+			based_asset_name: token[0].based_asset_name,
+			close_date: token[0].close_date.toString()
+		})
+	})
 
     return (
         <>
@@ -51,7 +68,7 @@ const WalletCard = ({ isLoading }) => {
 								</Grid>
 								<Grid item>
 										<Typography variant="h4"  gutterBottom align="start" sx={0}>
-											Token address : {values.address}
+											Token address : {values.token_address}
 										</Typography>
                                 </Grid>
 								<Grid item>
@@ -59,7 +76,7 @@ const WalletCard = ({ isLoading }) => {
 								</Grid>
 								<Grid item>
 										<Typography variant="h4"  gutterBottom align="start" sx={0}>
-											Token tezos balance : {values.balance}
+											Token tezos balance : {values.based_asset_amount}
 										</Typography>
                                 </Grid>
 								<Grid item>
@@ -67,7 +84,7 @@ const WalletCard = ({ isLoading }) => {
 								</Grid>
 								<Grid item>
 										<Typography variant="h4"  gutterBottom align="start" sx={0}>
-											Total token amount : {values.tokens}
+											Total token amount : {values.token_amount}
 										</Typography>
                                 </Grid>
 								<Grid item>
@@ -75,7 +92,7 @@ const WalletCard = ({ isLoading }) => {
 								</Grid>
 								<Grid item>
 										<Typography variant="h4"  gutterBottom align="start" sx={0}>
-											Token close date : {values.tokens}
+											Token close date : {values.close_date}
 										</Typography>
                                 </Grid>
 								<Grid item>

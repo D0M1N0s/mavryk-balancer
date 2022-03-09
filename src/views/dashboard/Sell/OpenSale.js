@@ -2,14 +2,12 @@ import PropTypes from 'prop-types';
 import * as React from 'react';
 
 // material-ui
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
 import DateTimePicker from '@mui/lab/DateTimePicker';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
+import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 
 import {
-    Divider,
     Box,
     Grid,
     FormControl,
@@ -19,7 +17,12 @@ import {
     InputAdornment,
     FormHelperText,
     Button,
-    Chip
+    Chip,
+    Dialog,
+    List,
+    ListItemButton,
+    ListItem,
+    ListItemText
 } from '@mui/material';
 
 // project imports
@@ -30,39 +33,47 @@ import MainCard from 'ui-component/cards/MainCard';
 // ===========================|| DASHBOARD DEFAULT - Open Sale ||=========================== //
 
 const OpenSale = ({ isLoading }) => {
-    const inputRange = [...Array(101).keys()];
+    const [open, setOpen] = React.useState(false);
     const [values, setValues] = React.useState({
-        sender: '',
-        token_address: 'first_address',
-        close_date: new Date('2014-08-18T21:11:54'),
-        input_weight: 38,
-        output_weight: 62,
-        total_token_amount: 23,
-        total_tezos_amount: 4,
-        token_sale_is_open: true
+        token_address: '',
+        token_name: '',
+        token_amount: 0,
+        based_asset_address: 'XTZ',
+        based_asset_name: 'XTZ',
+        based_asset_amount: 0,
+        close_date: null
     });
 
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const handleListItemClick = (event, currentToken) => {
+        console.log(currentToken);
+        const token = store.getState().tokens.filter((token) => token.token_address === currentToken);
+        setValues({
+            ...values,
+            based_asset_address: currentToken,
+            based_asset_name: token[0].token_name
+        });
+        handleClose();
+    };
+
     const openSale = () => {
-        console.log(values);
-        const map = store.getState().token.tokens.map((x) => x.address);
+        const map = store.getState().tokens.map((x) => x.address);
         console.log(map);
     };
 
     const handleChange = (prop) => (event) => {
-        if (prop === 'input_weight') {
-            console.log(prop);
-            console.log(event.target.value);
-            const output = 100 - event.target.value;
-            console.log(output);
-            setValues({ ...values, [prop]: event.target.value, output_weight: output });
-            console.log(values.output_weight);
+        if (prop === 'token_amount') {
+            setValues({ ...values, [prop]: event.target.value });
         } else {
-            console.log(event);
-            console.log(event.target);
             setValues({ ...values, [prop]: event.target.value });
         }
-        console.log('This is output weight');
-        console.log(values.output_weight);
     };
 
     return (
@@ -74,103 +85,123 @@ const OpenSale = ({ isLoading }) => {
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
                         <Box sx={{ p: 1.5 }}>
                             <Grid container direction="column">
-                                <Grid item sx={{ m: 1.5, width: '43ch' }}>
-                                    <Chip
-                                        label={
-                                            <Typography variant="h4" align="center" sx={2}>
-                                                Open sale for your token :
-                                            </Typography>
-                                        }
-                                        variant="outlined"
-                                    />
+                                <Grid item>
+                                    <Typography variant="h3" align="center">
+                                        Proportions of tokens.
+                                    </Typography>
                                 </Grid>
                                 <Grid container direction="row" justifyContent="center" alignItems="stretch">
-                                    <Divider />
                                     <Grid item>
-                                        <FormControl sx={{ m: 1, width: '43ch' }} variant="outlined">
+                                        <FormControl sx={{ m: 1, width: '21ch' }} variant="outlined">
                                             <OutlinedInput
                                                 id="outlined-adornment-token"
                                                 type="number"
                                                 value={values.total_token_amount}
-                                                onChange={handleChange('total_token_amount')}
+                                                onChange={handleChange('token_amount')}
                                                 endAdornment={<InputAdornment position="end">Tokens</InputAdornment>}
                                                 inputProps={{
                                                     'aria-label': 'weight'
                                                 }}
                                             />
-                                            <FormHelperText id="outlined-token-helper-text">
-                                                Input token amount you want to provide.
-                                            </FormHelperText>
+                                            <FormHelperText id="outlined-token-helper-text">Token amount.</FormHelperText>
                                         </FormControl>
                                     </Grid>
                                     <Grid item>
-                                        <FormControl sx={{ m: 1, width: '43ch' }} variant="outlined">
+                                        <FormControl sx={{ m: 1, width: '21ch' }} variant="outlined">
                                             <OutlinedInput
+                                                disabled
                                                 id="outlined-adornment-token"
                                                 type="number"
-                                                value={values.total_tezos_amount}
-                                                onChange={handleChange('total_tezos_amount')}
-                                                endAdornment={<InputAdornment position="end">Tezos</InputAdornment>}
+                                                value={values.based_asset_amount}
+                                                onChange={handleChange('based_asset_amount')}
+                                                endAdornment={
+                                                    <InputAdornment
+                                                        position="end"
+                                                        sx={{
+                                                            borderRadius: '80%',
+                                                            bgcolor: '#334155'
+                                                        }}
+                                                    >
+                                                        <Chip
+                                                            icon={<ChangeCircleIcon />}
+                                                            label={
+                                                                <Typography variant="h4" align="center">
+                                                                    {values.based_asset_name}
+                                                                </Typography>
+                                                            }
+                                                            onClick={handleClickOpen}
+                                                            variant="outlined"
+                                                            sx={{ width: '100%' }}
+                                                        />
+                                                        <Dialog onClose={handleClose} open={open}>
+                                                            <MainCard>
+                                                                <Box sx={{ p: 1.5, width: '100%' }}>
+                                                                    <Grid
+                                                                        container
+                                                                        direction="column"
+                                                                        justifyContent="center"
+                                                                        alignItems="stretch"
+                                                                        sx={{ width: '100%' }}
+                                                                    >
+                                                                        <Grid item sx={{ width: '100%' }}>
+                                                                            <List
+                                                                                sx={{
+                                                                                    width: '100%',
+                                                                                    bgcolor: '#334155',
+                                                                                    position: 'relative',
+                                                                                    overflow: 'auto',
+                                                                                    borderRadius: 2,
+                                                                                    maxHeight: '30.3ch'
+                                                                                }}
+                                                                            >
+                                                                                {store.getState().tokens.map((value) => (
+                                                                                    <ListItemButton
+                                                                                        onClick={(event) =>
+                                                                                            handleListItemClick(event, value.token_address)
+                                                                                        }
+                                                                                    >
+                                                                                        <ListItem key={value.token_address} disableGutters>
+                                                                                            <ListItemText
+                                                                                                primary={`Token : ${value.token_name}`}
+                                                                                            />
+                                                                                        </ListItem>
+                                                                                    </ListItemButton>
+                                                                                ))}
+                                                                            </List>
+                                                                        </Grid>
+                                                                    </Grid>
+                                                                </Box>
+                                                            </MainCard>
+                                                        </Dialog>
+                                                    </InputAdornment>
+                                                }
                                                 inputProps={{
                                                     'aria-label': 'weight'
                                                 }}
                                             />
-                                            <FormHelperText id="outlined-token-helper-text">
-                                                Input tezos amount you want to provide.
-                                            </FormHelperText>
+                                            <FormHelperText id="outlined-token-helper-text">Stablecoin.</FormHelperText>
                                         </FormControl>
                                     </Grid>
-                                    <Grid container direction="row" justifyContent="center" alignItems="stretch">
-                                        <Grid item>
-                                            <FormControl sx={{ m: 1, width: '20ch' }} variant="outlined">
-                                                <Select
-                                                    labelId="demo-simple-select-label"
-                                                    id="demo-simple-select"
-                                                    value={values.input_weight}
-                                                    label="Age"
-                                                    onChange={handleChange('input_weight')}
-                                                >
-                                                    {inputRange.map((number) => (
-                                                        <MenuItem key={number} value={number}>
-                                                            {number}
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                                <FormHelperText id="outlined-tezos-helper-text">Input token weight.</FormHelperText>
-                                            </FormControl>
-                                        </Grid>
-                                        <Grid item>
-                                            <FormControl sx={{ m: 1, width: '20ch' }} variant="outlined">
-                                                <Select
-                                                    labelId="demo-simple-select-label"
-                                                    id="demo-simple-select"
-                                                    disabled
-                                                    value={values.output_weight}
-                                                    label="Age"
-                                                    onChange={handleChange('output_weight')}
-                                                >
-                                                    {inputRange.map((number) => (
-                                                        <MenuItem key={number} value={number}>
-                                                            {number}
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                                <FormHelperText id="outlined-tezos-helper-text">Output token weight.</FormHelperText>
-                                            </FormControl>
-                                        </Grid>
-                                    </Grid>
                                     <Grid item>
-                                        <FormControl sx={{ m: 1, width: '43ch' }} variant="outlined">
+                                        <FormControl sx={{ width: '43ch' }} variant="outlined">
                                             <OutlinedInput
                                                 id="outlined-adornment-tezos"
                                                 type="string"
-                                                value={values.token_address}
+                                                value={values.output_token_address}
                                                 onChange={handleChange('token_address')}
-                                                inputProps={{
-                                                    'aria-label': 'weight'
-                                                }}
                                             />
                                             <FormHelperText id="outlined-tezos-helper-text">Input token address.</FormHelperText>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item>
+                                        <FormControl sx={{ width: '43ch' }} variant="outlined">
+                                            <OutlinedInput
+                                                id="outlined-adornment-tezos"
+                                                type="string"
+                                                value={values.output_token_address}
+                                                onChange={handleChange('token_name')}
+                                            />
+                                            <FormHelperText id="outlined-tezos-helper-text">Input token name.</FormHelperText>
                                         </FormControl>
                                     </Grid>
                                     <Grid item>

@@ -84,18 +84,21 @@ function FromFloatToNumber(value, decimals) {
 const TradingCard = ({ isLoading }) => {
     const [open, setOpen] = React.useState(false);
     const [values, setValues] = React.useState({
-        input: 0,
-        input_token: store.getState().token.tokens[0].token_address,
-        input_token_name: store.getState().token.tokens[0].token_name,
-        input_close_date: store.getState().token.tokens[0].close_date,
-        output: 0,
-        output_token: store.getState().token.tokens[0].token_address,
-        output_token_name: store.getState().token.tokens[0].token_name,
-        output_close_date: store.getState().token.tokens[0].close_date
+        token_input: 0,
+        token_amount: store.getState().tokens[0].token_amount,
+        token_weight: store.getState().tokens[0].token_weight,
+        token_address: store.getState().tokens[0].token_address,
+        token_name: store.getState().tokens[0].token_name,
+        based_asset_input: 0,
+        based_asset_amount: store.getState().tokens[0].based_asset_amount,
+        based_asset_weight: store.getState().tokens[0].based_asset_weight,
+        based_asset_address: store.getState().tokens[0].based_asset_name,
+        based_asset_name: store.getState().tokens[0].based_asset_name,
+        close_date: store.getState().tokens[0].close_date
     });
 
     const Completionist = () => <span>The tokensale is over!</span>;
-    const remainingTime = values.input_close_date - Date.now();
+    const remainingTime = values.close_date - Date.now();
 
     const renderer = ({ days, hours, minutes, seconds, completed }) => {
         if (completed) {
@@ -118,20 +121,51 @@ const TradingCard = ({ isLoading }) => {
         setOpen(false);
     };
 
+    const handleClick = () => {
+        console.log(
+            GetTokenAmount(
+                values.token_amount,
+                values.based_asset_amount,
+                values.token_input,
+                values.token_weight,
+                values.based_asset_weight
+            )
+        );
+    };
+
     const handleListItemClick = (event, currentToken) => {
         console.log(currentToken);
-        const token = store.getState().token.tokens.filter((token) => token.token_address === currentToken);
-        setValues({ ...values, input_token: currentToken, input_close_date: token[0].close_date });
+        const token = store.getState().tokens.filter((token) => token.token_address === currentToken);
+        setValues({
+            ...values,
+            token_weight: token[0].token_weight,
+            token_address: token[0].token_address,
+            token_name: token[0].token_name,
+            based_asset_weight: token[0].based_asset_weight,
+            based_asset_address: token[0].based_asset_address,
+            based_asset_name: token[0].based_asset_name,
+            close_date: token[0].close_date
+        });
+        store.dispatch({
+            type: 'setToken',
+            payload: {
+                token: currentToken
+            }
+        });
         handleClose();
     };
 
     const handleChange = (prop) => (event) => {
-        if (prop === 'input_token') {
-            console.log(event.target.value);
-            const token = store.getState().token.tokens.filter((token) => token.token_address === event.target.value);
-            console.log(token[0].close_date);
-            setValues({ ...values, input_token: event.target.value, input_close_date: token[0].close_date });
+        if (prop === 'input_token_address') {
+            const token = store.getState().tokens.filter((token) => token.token_address === event.target.value);
+            setValues({
+                ...values,
+                token_address: event.target.value,
+                token_name: token[0].token_name,
+                close_date: token[0].close_date
+            });
         } else {
+            const token = store.getState().tokens.filter((token) => token.token_address === values.input_token_address);
             setValues({ ...values, [prop]: event.target.value });
         }
     };
@@ -163,8 +197,8 @@ const TradingCard = ({ isLoading }) => {
                                 <OutlinedInput
                                     sx={{ width: '100%' }}
                                     id="input-token"
-                                    value={values.input}
-                                    onChange={handleChange('input')}
+                                    value={values.token_input}
+                                    onChange={handleChange('token_input')}
                                     endAdornment={
                                         <InputAdornment position="start">
                                             <Chip
@@ -191,7 +225,7 @@ const TradingCard = ({ isLoading }) => {
                                 <Chip
                                     label={
                                         <Typography variant="h4" align="center">
-                                            XTZ / {values.input_token} exchange rate : 3.4
+                                            XTZ / {values.token_name} exchange rate : 3.4
                                         </Typography>
                                     }
                                     variant="outlined"
@@ -201,10 +235,11 @@ const TradingCard = ({ isLoading }) => {
                         <Grid container direction="row" justifyContent="center" alignItems="stretch" sx={{ width: '100%' }}>
                             <Grid item sx={{ m: 1, width: '100%' }}>
                                 <OutlinedInput
+                                    disabled
                                     sx={{ width: '100%' }}
                                     id="input-token"
-                                    value={values.input}
-                                    onChange={handleChange('input')}
+                                    value={values.based_asset_input}
+                                    onChange={handleChange('based_asset_input')}
                                     endAdornment={
                                         <InputAdornment
                                             position="end"
@@ -217,7 +252,7 @@ const TradingCard = ({ isLoading }) => {
                                                 icon={<ChangeCircleIcon />}
                                                 label={
                                                     <Typography variant="h4" align="center">
-                                                        {values.input_token}
+                                                        {values.token_name}
                                                     </Typography>
                                                 }
                                                 onClick={handleClickOpen}
@@ -245,14 +280,14 @@ const TradingCard = ({ isLoading }) => {
                                                                         maxHeight: '30.3ch'
                                                                     }}
                                                                 >
-                                                                    {store.getState().token.tokens.map((value) => (
+                                                                    {store.getState().tokens.map((value) => (
                                                                         <ListItemButton
                                                                             onClick={(event) =>
                                                                                 handleListItemClick(event, value.token_address)
                                                                             }
                                                                         >
                                                                             <ListItem key={value.token_address} disableGutters>
-                                                                                <ListItemText primary={`Token : ${value.token_address}`} />
+                                                                                <ListItemText primary={`Token : ${value.token_name}`} />
                                                                             </ListItem>
                                                                         </ListItemButton>
                                                                     ))}
@@ -272,7 +307,7 @@ const TradingCard = ({ isLoading }) => {
                             </Grid>
                         </Grid>
                         <Grid item sx={{ width: '100%' }}>
-                            <Button variant="outlined" sx={{ width: '100%' }} disableElevation>
+                            <Button variant="outlined" sx={{ width: '100%' }} onClick={handleClick} disableElevation>
                                 <Typography variant="h4">Exchange Tokens</Typography>
                             </Button>
                         </Grid>
