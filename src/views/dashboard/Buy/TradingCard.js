@@ -99,9 +99,22 @@ const TradingCard = ({ isLoading }) => {
         based_asset_name: store.getState().tokens[0].based_asset_name,
         close_date: store.getState().tokens[0].close_date
     });
+    let exchangeRate = 1;
 
     const Completionist = () => <span>The tokensale is over!</span>;
     const remainingTime = values.close_date - Date.now();
+    const calculateExchangeRate = () => {
+        exchangeRate = FromFloatToNumber(
+            GetTokenAmount(
+                ToFloat(values.token_amount),
+                ToFloat(values.based_asset_amount),
+                ToFloat(1),
+                values.token_weight,
+                values.based_asset_weight
+            ),
+            20
+        );
+    };
 
     const renderer = ({ days, hours, minutes, seconds, completed }) => {
         if (completed) {
@@ -127,13 +140,15 @@ const TradingCard = ({ isLoading }) => {
     const handleClick = () => {
         console.log(
             GetTokenAmount(
-                values.token_amount,
-                values.based_asset_amount,
-                values.token_input,
+                ToFloat(values.token_amount),
+                ToFloat(values.based_asset_amount),
+                ToFloat(values.token_input),
                 values.token_weight,
                 values.based_asset_weight
             )
         );
+        calculateExchangeRate();
+        console.log(exchangeRate);
     };
 
     const handleListItemClick = (event, currentToken) => {
@@ -236,7 +251,7 @@ const TradingCard = ({ isLoading }) => {
                                 <Chip
                                     label={
                                         <Typography variant="h4" align="center">
-                                            XTZ / {values.token_name} exchange rate : 3.4
+                                            XTZ / {values.token_name} exchange rate : {exchangeRate}
                                         </Typography>
                                     }
                                     variant="outlined"
