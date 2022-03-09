@@ -162,11 +162,18 @@ const TradingCard = ({ isLoading }) => {
                 ...values,
                 token_address: event.target.value,
                 token_name: token[0].token_name,
-                close_date: token[0].close_date
+                close_date: token[0].close_sdate
             });
         } else {
-            const token = store.getState().tokens.filter((token) => token.token_address === values.input_token_address);
-            setValues({ ...values, [prop]: event.target.value });
+            const calculated = GetTokenAmount(
+                values.token_amount,
+                values.based_asset_amount,
+                values.token_input,
+                values.token_weight,
+                values.based_asset_weight
+            );
+
+            setValues({ ...values, based_asset_input: calculated, [prop]: event.target.value });
         }
     };
 
