@@ -39,7 +39,7 @@ const approve_transfer = async(standart_token_contract, tokensale_address, total
 const open_sale = async(tokensale_contract, fa12_address, total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals) => {
     console.log(`Opening tokensale for ${fa12_address} with ${total_base_asset_amount}ꜩ and ${total_token_amount} tokens of ${token_weight} weight`)
     const operation = await tokensale_contract.methods.openSale(fa12_address, toFloat(total_token_amount), toFloat(total_base_asset_amount), 
-        close_date, toFloat(token_weight), toFloat(1) - toFloat(token_weight), token_decimals, asset_decimals).send();
+        close_date, toFloat(token_weight), toFloat(1) - toFloat(token_weight), token_decimals, asset_decimals, "DMN").send();
     
     await operation.confirmation();
     assert(operation.status === 'applied', 'Operation was not applied')
@@ -138,7 +138,6 @@ const test_token_purchase = async() => {
     var storage = await getFullStorage(tokensale_contract, fa12_address);
     storage_assert(storage, true, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
     const correct_delta_tokens = get_token_amount(toFloat(total_base_asset_amount), toFloat(total_token_amount), toFloat(purchase_base_asset_amount), toFloat(1) - toFloat(token_weight), toFloat(token_weight))
-    console.log(toNumber(correct_delta_tokens, token_decimals));
     
     await buy_token(tokensale_contract, purchase_base_asset_amount, fa12_address)
     var storage = await getFullStorage(tokensale_contract, fa12_address);
@@ -235,7 +234,6 @@ const test_many_purchasings = async() => {
     for (let i = 0; i < 4; ++i) {
         let purchase_base_asset_amount = purchase_base_asset[i]
         const correct_delta_tokens = get_token_amount(toFloat(total_base_asset_amount), toFloat(total_token_amount), toFloat(purchase_base_asset_amount), toFloat(1) - toFloat(token_weight), toFloat(token_weight))
-        console.log(toNumber(correct_delta_tokens, token_decimals))
         
         await buy_token(tokensale1, purchase_base_asset_amount, fa12_address)
         var storage = await getFullStorage(tokensale1, fa12_address);

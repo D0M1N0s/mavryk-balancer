@@ -13,13 +13,14 @@ type token is record [
     token_sale_is_open : bool;
     token_decimals : nat;
     based_asset_decimals : nat;
+    token_symbol : string;
 ]
 
 type storage is big_map (address, token)
 
 type buyTokenParameter is nat * address
 type closeSaleParameter is address
-type openSaleParameter is  address * float * float * timestamp * weights_t * nat * nat
+type openSaleParameter is  address * float * float * timestamp * weights_t * nat * nat * string
 
 type balancerEntrypoint is
     | OpenSale of openSaleParameter
@@ -36,6 +37,7 @@ function open_sale( var token_address : address;
                     var weights: weights_t;  
                     var token_decimals : nat;
                     var based_asset_decimals : nat;
+                    var token_symbol : string;
                     var store : storage)  
                     : returnType is
 block {
@@ -55,6 +57,7 @@ block {
         token_sale_is_open = True;
         token_decimals = token_decimals;
         based_asset_decimals = based_asset_decimals;
+        token_symbol = token_symbol;
     ];
     const token_contract : contract(transferParams) =
         case (Tezos.get_entrypoint_opt("%transfer", token_address) : option (contract (transferParams))) of
@@ -151,7 +154,7 @@ block {
 
 function main (var action : balancerEntrypoint; var store : storage): returnType is
     case action of
-        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, param.5, param.6, store)
+        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, param.5, param.6, param.7, store)
         | BuyToken (param) -> buy_token(param.0, param.1, store)
         | CloseSale (param) -> close_sale (param, store)
     end

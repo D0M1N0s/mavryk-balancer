@@ -63,7 +63,7 @@ const remove_operator = async(standart_token_contract, owner_address, tokensale_
 const open_sale = async(tokensale_contract, fa2_address, total_token_amount, total_base_asset_amount, close_date, token_weight, token_id, token_decimals, asset_decimals) => {
     console.log(`Opening tokensale for ${fa2_address} with ${total_base_asset_amount}ꜩ and ${total_token_amount} tokens of ${token_weight} weight`)
     const operation = await tokensale_contract.methods.openSale(fa2_address, toFloat(total_token_amount), toFloat(total_base_asset_amount), 
-        close_date, toFloat(token_weight), toFloat(1) - toFloat(token_weight), token_id, token_decimals, asset_decimals).send();
+        close_date, toFloat(token_weight), toFloat(1) - toFloat(token_weight), token_id, token_decimals, asset_decimals, "DMN").send();
     
     await operation.confirmation();
     assert(operation.status === 'applied', 'Operation was not applied');
