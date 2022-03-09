@@ -29,6 +29,9 @@ import Countdown from 'react-countdown';
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
 
 const C_PRECISION = 10 ** 10;
+function ToFloat(value) {
+    return Math.floor(value * C_PRECISION);
+}
 function Mul(a, b) {
     return Math.floor((a * b) / C_PRECISION);
 }
@@ -166,14 +169,15 @@ const TradingCard = ({ isLoading }) => {
             });
         } else {
             const calculated = GetTokenAmount(
-                values.token_amount,
-                values.based_asset_amount,
-                values.token_input,
+                ToFloat(values.token_amount),
+                ToFloat(values.based_asset_amount),
+                ToFloat(values.token_input),
                 values.token_weight,
                 values.based_asset_weight
             );
-
-            setValues({ ...values, based_asset_input: calculated, [prop]: event.target.value });
+            console.log(values);
+            console.log(values.token_input);
+            setValues({ ...values, based_asset_input: FromFloatToNumber(calculated, 20), [prop]: event.target.value });
         }
     };
 
