@@ -80,13 +80,13 @@ const getFullStorage = async (contract, tokenAddress) => {
 function storageAssert(storage, admin, tokensaleStatus, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight){
     assert(storage.admin == admin, `admin: ${storage.admin}; expected: ${admin}`);
     let token_list = storage.token_list;
-    assert(token_list.token_sale_is_open == tokensaleStatus, `tokensale status: ${token_list.token_sale_is_open}; expected: ${tokensaleStatus}`)
-    assert(equal(token_list.total_token_amount, toFloat(totalTokenAmount)), `total_token_amount: ${token_list.total_token_amount}; expected: ${toFloat(totalTokenAmount)}`)
-    assert(equal(token_list.total_based_asset_amount, toFloat(totalBaseAssetAmount)), `total_based_asset_amount: ${token_list.total_based_asset_amount}; expected: ${toFloat(totalBaseAssetAmount)}`)
-    assert(token_list.address == fa12Address, `token address: ${token_list.address}; expected: ${fa12Address}`)
+    assert(token_list.sale == tokensaleStatus, `tokensale status: ${token_list.token_sale_is_open}; expected: ${tokensaleStatus}`)
+    assert(equal(token_list.token_amount, toFloat(totalTokenAmount)), `total_token_amount: ${token_list.total_token_amount}; expected: ${toFloat(totalTokenAmount)}`)
+    assert(equal(token_list.based_asset_amount, toFloat(totalBaseAssetAmount)), `total_based_asset_amount: ${token_list.based_asset_amount}; expected: ${toFloat(totalBaseAssetAmount)}`)
+    assert(token_list.token_address == fa12Address, `token address: ${token_list.address}; expected: ${fa12Address}`)
     assert(token_list.close_date == closeDate, `close_date: ${token_list.closeDate}; expected: ${closeDate}`)
     assert(token_list.weights.token_weight['c'][0] == toFloat(tokenWeight), `token_weight: ${token_list.weights.token_weight['c'][0]}; expected: ${tokenWeight}`)
-    assert(token_list.weights.base_asset_weight['c'][0] == toFloat(1) - toFloat(tokenWeight), `base_asset_weight: ${token_list.weights.base_asset_weight['c'][0]}; expected: ${toFloat(1) - toFloat(tokenWeight)}`)
+    assert(token_list.weights.based_asset_weight['c'][0] == toFloat(1) - toFloat(tokenWeight), `based_asset_weight: ${token_list.weights.based_asset_weight['c'][0]}; expected: ${toFloat(1) - toFloat(tokenWeight)}`)
 }
 
 const createTezosFromHangzhou = async (path) => {

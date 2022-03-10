@@ -2,19 +2,21 @@
 #include "lib/arithmetic.ligo"
 
 type float is nat
-type weights_t is michelson_pair(int, "token_weight", int, "base_asset_weight")
+type weights_t is michelson_pair(int, "token_weight", int, "based_asset_weight")
 
 type token is record [
-    address : address;
+    token_address : address;
     close_date : timestamp;
     weights : weights_t;  // stored as (number * c_PRECISION, number * c_PRECISION)
-    total_token_amount : float; // stored as number * c_PRECISION
-    total_based_asset_amount : float; // stored as number * c_PRECISION
-    token_sale_is_open : bool;
-    token_id : nat;
-    token_decimals : nat;
-    based_asset_decimals : nat;
+    token_amount : float; // stored as number * c_PRECISION
+    based_asset_amount : float; // stored as number * c_PRECISION
+    sale : bool;
+    id_fa2 : nat;
+    token_dec : nat;
+    based_asset_dec : nat;
     token_symbol : string;
+    based_asset_address : string;
+    based_asset_name : string;
 ]
 
 type storage is record[
@@ -24,7 +26,7 @@ type storage is record[
 
 type buyTokenParameter is nat * address * address
 type closeSaleParameter is address
-type openSaleParameter is  address * float * float * timestamp * weights_t * nat * nat * nat * string * address
+type openSaleParameter is  address * float * float * timestamp * weights_t * nat * nat * nat * string * address * string * string
 
 type balancerEntrypoint is
     | OpenSale of openSaleParameter
@@ -35,15 +37,17 @@ type returnType is list (operation) * storage
 
 
 function open_sale( var token_address : address;  
-                    var total_token_amount : float;
-                    var total_based_asset_amount : float;
+                    var token_amount : float;
+                    var based_asset_amount : float;
                     var close_date : timestamp; 
                     var weights: weights_t;
-                    var token_id : nat;
-                    var token_decimals : nat;
-                    var based_asset_decimals : nat;
+                    var id_fa2 : nat;
+                    var token_dec : nat;
+                    var based_asset_dec : nat;
                     var token_symbol : string;
                     var token_issuer : address;
+                    var based_asset_address : string;
+                    var based_asset_name : string;
                     var store : storage)  
                     : returnType is
 block {
@@ -51,31 +55,33 @@ block {
     else skip;
     case store.token_list[token_address] of
         | Some(val) -> block {
-            if val.token_sale_is_open then failwith ("Tokensale is already open");
+            if val.sale then failwith ("Tokensale is already open");
             else skip;
             }
         | None -> skip
     end;
     store.token_list[token_address] := record [
-        address = token_address;
+        token_address = token_address;
         close_date  = close_date;
         weights = weights;
-        total_token_amount = total_token_amount;
-        total_based_asset_amount = total_based_asset_amount;
-        token_sale_is_open = True;
-        token_id = token_id;
-        token_decimals = token_decimals;
-        based_asset_decimals = based_asset_decimals;
+        token_amount = token_amount;
+        based_asset_amount = based_asset_amount;
+        sale = True;
+        id_fa2 = id_fa2;
+        token_dec = token_dec;
+        based_asset_dec = based_asset_dec;
         token_symbol = token_symbol;
+        based_asset_address = based_asset_address;
+        based_asset_name = based_asset_name;
     ];
     const token_contract : contract(transferType) =
         case (Tezos.get_entrypoint_opt("%transfer", token_address) : option (contract (transferType))) of
             Some (contract) -> contract
             | None -> (failwith ("Contract for this token not found.") : contract (transferType))
         end;
-    var power : int := c_PRECISION_ORDER - token_decimals;
+    var power : int := c_PRECISION_ORDER - token_dec;
     var divisor : nat := pow(10n, abs(power));
-    var token_amnt := total_token_amount;
+    var token_amnt := token_amount;
     if power > 0 then
         token_amnt := token_amnt / divisor;
     else
@@ -84,7 +90,7 @@ block {
     var tsx : list(transfer_destination) := list[record[
                 amount = token_amnt; 
                 to_ = Tezos.self_address; 
-                token_id = token_id]];
+                token_id = id_fa2]];
 
     var transfer_param : transferType := list [record[
                 from_ = token_issuer; 
@@ -119,7 +125,7 @@ block {
         | Some(val) -> val
         | None -> failwith("No such token")
     end;
-    if not cur_token.token_sale_is_open then block {
+    if not cur_token.sale then block {
         failwith("Tokensale is closed");
     } else skip;
     const token_contract : contract(transferType) =
@@ -129,11 +135,11 @@ block {
     end;
     var token_w : float := abs (cur_token.weights.0);
     var base_asset_w : float := abs (cur_token.weights.1);
-    var base_asset_reserve : float := cur_token.total_based_asset_amount;
-    var token_reserve : float := cur_token.total_token_amount;
+    var base_asset_reserve : float := cur_token.based_asset_amount;
+    var token_reserve : float := cur_token.token_amount;
     var delta_token := get_token_amount(base_asset_reserve, token_reserve,  base_asset_amnt, base_asset_w, token_w);
       
-    var power : int := c_PRECISION_ORDER - cur_token.token_decimals;
+    var power : int := c_PRECISION_ORDER - cur_token.token_dec;
     var divisor : nat := pow(10n, abs(power));
     var token_amnt := delta_token;
     if power > 0 then
@@ -146,7 +152,7 @@ block {
     var tsx : list(transfer_destination) := list[record[
                 amount = token_amnt; 
                 to_ = reciever; 
-                token_id = cur_token.token_id]];
+                token_id = cur_token.id_fa2]];
 
     var transfer_param : list(transfer) := list [record[
                 from_ = Tezos.self_address; 
@@ -160,8 +166,8 @@ block {
     else
         token_amnt := token_amnt / divisor;
     
-    cur_token.total_token_amount := abs(cur_token.total_token_amount - token_amnt);
-    cur_token.total_based_asset_amount := cur_token.total_based_asset_amount + base_asset_amnt;
+    cur_token.token_amount := abs(cur_token.token_amount - token_amnt);
+    cur_token.based_asset_amount := cur_token.based_asset_amount + base_asset_amnt;
     store.token_list[token_address] := cur_token;
 } with (operations, store)
     
@@ -174,20 +180,20 @@ block {
         | Some(val) -> val
         | None -> failwith("No such token in tokensale")
     end;
-    if not cur_token.token_sale_is_open then block {
+    if not cur_token.sale then block {
         failwith("Tokensale is already closed");
     } else skip;
     if Tezos.now < cur_token.close_date then block {
         failwith("Closing time hasn't come yet");
     } else skip;
-    cur_token.token_sale_is_open := False;
+    cur_token.sale := False;
     store.token_list[token_address] := cur_token;
     // add burning tokens and sending money to issuer
 } with ((nil : list (operation)), store)
 
 function main (var action : balancerEntrypoint; var store : storage): returnType is
     case action of
-        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, param.5, param.6, param.7, param.8, param.9, store)
+        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, param.5, param.6, param.7, param.8, param.9, param.10, param.11, store)
         | BuyToken (param) -> buy_token(param.0, param.1, param.2, store)
         | CloseSale (param) -> close_sale (param, store)
     end

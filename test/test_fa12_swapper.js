@@ -39,8 +39,20 @@ const approveTransfer = async(standartTokenContract, tokensaleAddress, totalToke
 
 const openSale = async(tokensaleContract, fa12Address, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals, adminAddress) => {
     console.log(`Opening tokensale for ${fa12Address} with ${totalBaseAssetAmount}ꜩ and ${totalTokenAmount} tokens of ${tokenWeight} weight`)
-    const operation = await tokensaleContract.methods.openSale(fa12Address, toFloat(totalTokenAmount), toFloat(totalBaseAssetAmount), 
-        closeDate, toFloat(tokenWeight), toFloat(1) - toFloat(tokenWeight), tokenDecimals, assetDecimals, "DMN", adminAddress).send();
+    const operation = await tokensaleContract.methods.openSale(
+        fa12Address, 
+        toFloat(totalTokenAmount), 
+        toFloat(totalBaseAssetAmount), 
+        closeDate, 
+        toFloat(tokenWeight), 
+        toFloat(1) - toFloat(tokenWeight), 
+        tokenDecimals, 
+        assetDecimals, 
+        "DMN", 
+        adminAddress,
+        "",
+        "Tezos"
+    ).send();
     
     await operation.confirmation();
     assert(operation.status === 'applied', 'Operation was not applied')
@@ -72,6 +84,10 @@ const testOpenTwice = async () => {
     const {totalTokenAmount, totalBaseAssetAmount, 
         closeDate, tokenWeight, tokenDecimals, assetDecimals} = await getTestInput();
         
+    
+        // await closeSale(tokensaleContract, fa12Address);
+        // await approveTransfer(standartTokenContract, tokensaleAddress, 0, tokenDecimals)
+    
     await approveTransfer(standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals)
     await openSale(tokensaleContract, fa12Address, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals, issuerAddress);
     await approveTransfer(standartTokenContract, tokensaleAddress, 0, tokenDecimals)
