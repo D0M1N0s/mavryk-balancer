@@ -68,6 +68,13 @@ const OpenSale = ({ isLoading }) => {
             based_asset_address: currentToken,
             based_asset_name: token[0].token_name
         });
+        store.dispatch({
+            type: 'changeToken',
+            payload: {
+                based_asset_address: currentToken,
+                based_asset_name: token[0].token_name
+            }
+        });
         handleClose();
     };
 
@@ -76,12 +83,24 @@ const OpenSale = ({ isLoading }) => {
         console.log(map);
     };
 
+    const setTime = (time) => {
+        setValues({ ...values, close_date: time });
+        store.dispatch({
+            type: 'changeToken',
+            payload: {
+                close_date: time
+            }
+        });
+    };
     const handleChange = (prop) => (event) => {
-        if (prop === 'token_amount') {
-            setValues({ ...values, [prop]: event.target.value });
-        } else {
-            setValues({ ...values, [prop]: event.target.value });
-        }
+        setValues({ ...values, [prop]: event.target.value });
+        store.dispatch({
+            type: 'changeToken',
+            payload: {
+                [prop]: event.target.value
+            }
+        });
+        console.log(store.getState().sale);
     };
 
     const approveTransfer = async (standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals) => {
@@ -95,6 +114,9 @@ const OpenSale = ({ isLoading }) => {
     };
 
     const addOperator = async (standartTokenContract, ownerAddress, tokensaleAddress, tokenId) => {
+        /*
+         * Gives permission to use wallets funds.
+         */
         const operation = await standartTokenContract.methods
             .update_operators([
                 {
@@ -110,6 +132,9 @@ const OpenSale = ({ isLoading }) => {
     };
 
     const removeOperator = async (standartTokenContract, ownerAddress, tokensaleAddress, tokenId) => {
+        /**
+         *  Removes permission to move wallet funds.
+         */
         const operation = await standartTokenContract.methods
             .update_operators([
                 {
@@ -232,7 +257,6 @@ const OpenSale = ({ isLoading }) => {
                                     <Grid item>
                                         <FormControl sx={{ m: 1, width: '21ch' }} variant="outlined">
                                             <OutlinedInput
-                                                disabled
                                                 id="outlined-adornment-token"
                                                 type="number"
                                                 value={values.based_asset_amount}
@@ -333,7 +357,7 @@ const OpenSale = ({ isLoading }) => {
                                                 renderInput={(props) => <TextField {...props} />}
                                                 value={values.close_date}
                                                 onChange={(newValue) => {
-                                                    setValues({ ...values, close_date: newValue });
+                                                    setTime(newValue);
                                                 }}
                                             />
                                             <FormHelperText id="outlined-tezos-helper-text">Pick close date of the auction.</FormHelperText>

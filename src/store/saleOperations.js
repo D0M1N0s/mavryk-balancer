@@ -1,12 +1,16 @@
 export const saleState = {
-    sender: '',
-    token_address: 'first_address',
-    close_date: new Date('2014-08-18T21:11:54'),
-    input_weight: 38,
-    output_weight: 62,
-    total_token_amount: 23,
-    total_tezos_amount: 4,
-    token_sale_is_open: true
+    token_address: null,
+    token_name: null,
+    token_amount: null,
+    based_asset_address: null,
+    based_asset_name: null,
+    based_asset_amount: null,
+    close_date: null,
+    input_weight: null,
+    output_weight: null,
+    token_dec: null,
+    fa2: null,
+    token_sale_is_open: null
 };
 
 const saleOperations = (state = saleState, action) => {
@@ -14,17 +18,17 @@ const saleOperations = (state = saleState, action) => {
         case 'changeToken':
             return {
                 ...state,
-                tezos: action.payload.tezos,
-                wallet: action.payload.wallet,
-                address: action.payload.address,
-                balance: action.payload.balance,
-                connected: true
+                ...action.payload
             };
         case 'changeTokenWeight':
             return {
                 ...state,
-                input_weight: action.payload.input_weight,
-                output_weight: action.payload.output_weight
+                ...action.payload
+            };
+        case 'specifyToken':
+            return {
+                ...state,
+                ...action.payload
             };
         default:
             return {

@@ -39,14 +39,17 @@ const Statistics = ({ isLoading }) => {
     });
 
     const handleChange = (prop) => (event) => {
-        if (prop === 'input_weight') {
-            const output = 100 - event.target.value;
-            setValues({ [prop]: event.target.value, output_weight: output });
-        } else {
-            setValues({ ...values, [prop]: event.target.value });
-        }
-        console.log('This is output weight');
-        console.log(values.output_weight);
+		const output = 100 - event.target.value;
+		setValues({ [prop]: event.target.value, output_weight: output });
+		store.dispatch({
+			type: "changeTokenWeight",
+			payload: {
+				input_weight: event.target.value,
+				output_weight: output
+			}
+		});
+
+        console.log(store.getState().sale)
     };
 
 	const data = {
