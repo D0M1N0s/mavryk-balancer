@@ -9,4 +9,4 @@ At the OpenSale entrypoint the new token and the necessary information are added
 
 At the BuyToken entrypoint an exchange takes place between Tezos base asset/XTZ and issuer token. The amount of outcome token is calculated via automated market maker.
 
-At CloseSale the the tokensale becomes closed and the token is removed from the list of selling tokens.
+At CloseSale the tokensale becomes closed and the token is removed from the list of selling tokens.

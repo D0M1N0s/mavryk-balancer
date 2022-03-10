@@ -1,257 +1,166 @@
+import {toFloat, toNumber, getFullStorage, getContract,
+    storageAssert, getTokenAmount, createTezosFromHangzhou} from "./common_functions.js"
 
-const { TezosToolkit } = require('@taquito/taquito')
-const { InMemorySigner } = require('@taquito/signer')
+import assert from 'assert';
+import fs  from "fs";
 
-var assert = require('assert');
-const fs = require("fs");
-const RPC = 'https://rpc.tzkt.io/hangzhou2net/'
 const { address } = JSON.parse(fs.readFileSync("../deployed/fa12-latest.json").toString())
-const c_PRECISION = 10000000000;
-const eps = 5;
-
-function toFloat(value) {
-    return Math.floor(value * c_PRECISION);
-}
-
-function  toNumber(value, decimals) {
-    let num = Math.floor((10 ** decimals) * value / c_PRECISION);
-    return num / (10 ** decimals);
-}
-function equal(a, b) {
-    return Math.abs(a - b) / c_PRECISION < 10 ** (-eps);
-}
-const createTezosFromHangzhou = async (path) => {
-    const Tezos = new TezosToolkit(RPC);
-    const acc = require(path)
-    await Tezos.setSignerProvider(InMemorySigner.fromFundraiser(acc.email, acc.password, acc.mnemonic.join(' ')));
-    return Tezos;
-}
-
-const getContract = async(Tezos, contract_address) => {
-    const contract = await Tezos.contract.at(contract_address);
-    return contract
-}
 
 const getAccounts = async () => {
     const Tezos = await createTezosFromHangzhou('../hangzhounet.json');
     const Tezos1 = await createTezosFromHangzhou('./accounts/buyer1.json');
     const Tezos2 = await createTezosFromHangzhou('./accounts/buyer2.json');
     const Tezos3 = await createTezosFromHangzhou('./accounts/buyer3.json');
-    const tokensale_address = address;
-    const fa12_address = "KT1VE7N21H9X48yk1bGjikDDrSFGWDvsJVyb";
+    const tokensaleAddress = address;
+    const fa12Address = "KT1VE7N21H9X48yk1bGjikDDrSFGWDvsJVyb";
 
-    return { Tezos, Tezos1, Tezos2, Tezos3, tokensale_address, fa12_address}
-}
-
-const getFullStorage = async (contract, token_address) => {
-    const storage = await contract.storage();
-    return storage.get(token_address)
+    return { Tezos, Tezos1, Tezos2, Tezos3, tokensaleAddress, fa12Address}
 }
 
 const getTestInput = async() => {
-    const total_token_amount = 2;
-    const total_base_asset_amount = 4;
-    const close_date = "2022-01-01T00:01:30.000Z";
-    const token_weight = 0.7;
-    const token_decimals = 8;
-    const asset_decimals = 6;
-    return {total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals}
+    const totalTokenAmount = 2;
+    const totalBaseAssetAmount = 4;
+    const closeDate = "2022-01-01T00:01:30.000Z";
+    const tokenWeight = 0.7;
+    const tokenDecimals = 8;
+    const assetDecimals = 6;
+    return {totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals}
 }
 
-const approve_transfer = async(standart_token_contract, tokensale_address, total_token_amount, token_decimals) => {
-    console.log(`Approving transfer ${total_token_amount}ꜩ to ${tokensale_address}`);
-    const normalized_token_amount = Math.floor(total_token_amount * (10 ** token_decimals));
-    const operation = await standart_token_contract.methods.approve(tokensale_address, normalized_token_amount).send();
+const approveTransfer = async(standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals) => {
+    console.log(`Approving transfer ${totalTokenAmount}ꜩ to ${tokensaleAddress}`);
+    const normalizedTokenAmount = Math.floor(totalTokenAmount * (10 ** tokenDecimals));
+    const operation = await standartTokenContract.methods.approve(tokensaleAddress, normalizedTokenAmount).send();
     await operation.confirmation();
     assert(operation.status === 'applied', 'Operation was not applied');
     console.log("Operation confirmed");
 }
 
-const open_sale = async(tokensale_contract, fa12_address, total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals) => {
-    console.log(`Opening tokensale for ${fa12_address} with ${total_base_asset_amount}ꜩ and ${total_token_amount} tokens of ${token_weight} weight`)
-    const operation = await tokensale_contract.methods.openSale(fa12_address, toFloat(total_token_amount), toFloat(total_base_asset_amount), 
-        close_date, toFloat(token_weight), toFloat(1) - toFloat(token_weight), token_decimals, asset_decimals).send();
+const openSale = async(tokensaleContract, fa12Address, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals) => {
+    console.log(`Opening tokensale for ${fa12Address} with ${totalBaseAssetAmount}ꜩ and ${totalTokenAmount} tokens of ${tokenWeight} weight`)
+    const operation = await tokensaleContract.methods.openSale(fa12Address, toFloat(totalTokenAmount), toFloat(totalBaseAssetAmount), 
+        closeDate, toFloat(tokenWeight), toFloat(1) - toFloat(tokenWeight), tokenDecimals, assetDecimals, "DMN").send();
     
     await operation.confirmation();
     assert(operation.status === 'applied', 'Operation was not applied')
     console.log("Operation confirmed");
 }
 
-const close_sale = async(tokensale_contract, fa12_address) => {
-    console.log(`Closing tokensale for ${fa12_address}`)
-    const operation = await tokensale_contract.methods.closeSale(fa12_address).send();
+const closeSale = async(tokensaleContract, fa12Address) => {
+    console.log(`Closing tokensale for ${fa12Address}`)
+    const operation = await tokensaleContract.methods.closeSale(fa12Address).send();
     await operation.confirmation();
     assert(operation.status === 'applied', 'Operation was not applied')
     console.log("Operation confirmed");
 }
 
-const buy_token = async(tokensale_contract, purchase_base_asset_amount, fa12_address) => {
-    console.log(`Purchuasing tokens ${fa12_address} by price ${purchase_base_asset_amount}ꜩ`)
-    const op = await tokensale_contract.methods.buyToken(toFloat(purchase_base_asset_amount), fa12_address)
+const buyToken = async(tokensaleContract, purchaseBaseAssetAmount, fa12Address) => {
+    console.log(`Purchuasing tokens ${fa12Address} by price ${purchaseBaseAssetAmount}ꜩ`)
+    const op = await tokensaleContract.methods.buyToken(toFloat(purchaseBaseAssetAmount), fa12Address)
         .send()
     await op.confirmation()
     assert(op.status === 'applied', 'Operation was not applied')
     console.log("Operation confirmed");
 }
 
-function storage_assert(storage, tokensale_status, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight){
-    assert(storage.token_sale_is_open == tokensale_status, `tokensale status: ${storage.token_sale_is_open}; expected: ${tokensale_status}`)
-    assert(equal(storage.total_token_amount, toFloat(total_token_amount)), `total_token_amount: ${storage.total_token_amount}; expected: ${toFloat(total_token_amount)}`)
-    assert(equal(storage.total_based_asset_amount, toFloat(total_base_asset_amount)), `total_based_asset_amount: ${storage.total_base_asset_amount}; expected: ${toFloat(total_base_asset_amount)}`)
-    assert(storage.address == fa12_address, `token address: ${storage.address}; expected: ${fa12_address}`)
-    assert(storage.close_date == close_date, `close_date: ${storage.close_date}; expected: ${close_date}`)
-    assert(storage.weights.token_weight['c'][0] == toFloat(token_weight), `token_weight: ${storage.weights.token_weight['c'][0]}; expected: ${token_weight}`)
-    assert(storage.weights.base_asset_weight['c'][0] == toFloat(1) - toFloat(token_weight), `base_asset_weight: ${storage.weights.base_asset_weight['c'][0]}; expected: ${toFloat(1) - toFloat(token_weight)}`)
-}
+const testOpenTwice = async () => {
+    const {Tezos, tokensaleAddress, fa12Address} = await getAccounts();
+    const tokensaleContract = await getContract(Tezos, tokensaleAddress);
+    const standartTokenContract = await getContract(Tezos, fa12Address);
 
-
-const test_open_twice = async () => {
-    const {Tezos, tokensale_address, fa12_address} = await getAccounts();
-    const tokensale_contract = await getContract(Tezos, tokensale_address);
-    const standart_token_contract = await getContract(Tezos, fa12_address);
-
-    const {total_token_amount, total_base_asset_amount, 
-        close_date, token_weight, token_decimals, asset_decimals} = await getTestInput();
+    const {totalTokenAmount, totalBaseAssetAmount, 
+        closeDate, tokenWeight, tokenDecimals, assetDecimals} = await getTestInput();
     
-    await approve_transfer(standart_token_contract, tokensale_address, total_token_amount, token_decimals)
-    await open_sale(tokensale_contract, fa12_address, total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals);
-    await approve_transfer(standart_token_contract, tokensale_address, 0, token_decimals)
+    await approveTransfer(standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals)
+    await openSale(tokensaleContract, fa12Address, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals);
+    await approveTransfer(standartTokenContract, tokensaleAddress, 0, tokenDecimals)
     
-    var storage = await getFullStorage(tokensale_contract, fa12_address);
-    storage_assert(storage, true, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
+    var storage = await getFullStorage(tokensaleContract, fa12Address);
+    storageAssert(storage, true, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
     let thrown = false;
     try {
-        await open_sale(tokensale_contract, fa12_address, total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals);
+        await openSale(tokensaleContract, fa12Address, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals);
     } catch (ex) { 
         thrown = true; 
         assert(ex.message == "Tokensale is already open")
-        storage = await getFullStorage(tokensale_contract, fa12_address);
-        storage_assert(storage, true, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
+        storage = await getFullStorage(tokensaleContract, fa12Address);
+        storageAssert(storage, true, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
     }
     assert(thrown)
 
-    await close_sale(tokensale_contract, fa12_address);
-    storage = await getFullStorage(tokensale_contract, fa12_address);
-    storage_assert(storage, false, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
+    await closeSale(tokensaleContract, fa12Address);
+    storage = await getFullStorage(tokensaleContract, fa12Address);
+    storageAssert(storage, false, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
 }
 
-const test_close_closed = async() => {
-    const {Tezos, tokensale_address, fa12_address} = await getAccounts();
-    const tokensale_contract = await getContract(Tezos, tokensale_address);
-    const standart_token_contract = await getContract(Tezos, fa12_address);
+const testCloseClosed = async() => {
+    const {Tezos, tokensaleAddress, fa12Address} = await getAccounts();
+    const tokensaleContract = await getContract(Tezos, tokensaleAddress);
+    const standartTokenContract = await getContract(Tezos, fa12Address);
     
-    const {total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals} = await getTestInput();
+    const {totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals} = await getTestInput();
 
-    await approve_transfer(standart_token_contract, tokensale_address, total_token_amount, token_decimals)
-    await open_sale(tokensale_contract, fa12_address, total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals);
-    await approve_transfer(standart_token_contract, tokensale_address, 0, token_decimals)
+    await approveTransfer(standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals)
+    await openSale(tokensaleContract, fa12Address, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals);
+    await approveTransfer(standartTokenContract, tokensaleAddress, 0, tokenDecimals)
 
-    var storage = await getFullStorage(tokensale_contract, fa12_address);
-    storage_assert(storage, true, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
-    await close_sale(tokensale_contract, fa12_address);
-    storage = await getFullStorage(tokensale_contract, fa12_address);
+    var storage = await getFullStorage(tokensaleContract, fa12Address);
+    storageAssert(storage, true, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
+    await closeSale(tokensaleContract, fa12Address);
+    storage = await getFullStorage(tokensaleContract, fa12Address);
 
     let thrown = false;
     try {
-        await close_sale(tokensale_contract, fa12_address);
+        await closeSale(tokensaleContract, fa12Address);
     } catch (ex) { 
         thrown = true; 
         assert(ex.message == "Tokensale is already closed")
-        storage = await getFullStorage(tokensale_contract, fa12_address);
-        storage_assert(storage, false, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
+        storage = await getFullStorage(tokensaleContract, fa12Address);
+        storageAssert(storage, false, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
     }
     assert(thrown)
-    storage_assert(storage, false, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
+    storageAssert(storage, false, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
 }
 
-function mul(a, b) {
-    return Math.floor(a * b / c_PRECISION)
-}
-
-function div(a, b) {
-    return Math.floor((a * c_PRECISION) / b)
-}
-
-function powFloatIntoNat(a , power) {
-    if (power == 0) {
-        return c_PRECISION;
-    }
-    let root = powFloatIntoNat(a, Math.floor(power / 2));
-    let result = mul(root, root);
-    if (power % 2 == 1) {
-        result = mul(a, result)
-    }
-    return result
-}
-
-function approxPowFloat(base, alpha, steps = 2000) {
-    let term = 1 * c_PRECISION
-    let res = 0
-    for (let n = 1; n <= steps; ++n) {
-        res += term
-        let m = mul(alpha - (n - 1) * c_PRECISION, base - 1 * c_PRECISION)
-        m = div(m, n * c_PRECISION)
-        term = mul(term, m)
-    }
-    return res
-}
-
-function powFloats(a, power){
-    const mul1 = powFloatIntoNat(a, power / c_PRECISION)
-    const mul2 = approxPowFloat(a, power % c_PRECISION)
-    const res = mul(mul1, mul2)
-    return res
-}
-
-function get_token_amount(reserve_token_i, reserve_token_o, delta_token_i, weight_i, weight_o) {
-    const fraction = div(reserve_token_i, (reserve_token_i + delta_token_i))
-    const power = div(weight_i, weight_o)
-    const fraction_root = powFloats(fraction, power)
-    const sub_res = 1 * c_PRECISION - fraction_root
-    const delta_token_o = mul(reserve_token_o, sub_res)
-    return delta_token_o
-}
-
-const test_token_purchase = async() => {
-    const {Tezos, tokensale_address, fa12_address} = await getAccounts();
-    const tokensale_contract = await getContract(Tezos, tokensale_address);
-    const standart_token_contract = await getContract(Tezos, fa12_address);
-    const {close_date, token_weight, token_decimals, asset_decimals} = await getTestInput();
+const testTokenPurchase = async() => {
+    const {Tezos, tokensaleAddress, fa12Address} = await getAccounts();
+    const tokensaleContract = await getContract(Tezos, tokensaleAddress);
+    const standartTokenContract = await getContract(Tezos, fa12Address);
+    const {closeDate, tokenWeight, tokenDecimals, assetDecimals} = await getTestInput();
     
-    let total_token_amount = 2000;
-    let total_base_asset_amount = 40;
-    let purchase_base_asset_amount = 10;
+    let totalTokenAmount = 2000;
+    let totalBaseAssetAmount = 40;
+    let purchaseBaseAssetAmount = 10;
 
-    await approve_transfer(standart_token_contract, tokensale_address, total_token_amount, token_decimals)
-    await open_sale(tokensale_contract, fa12_address, total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals);
-    await approve_transfer(standart_token_contract, tokensale_address, 0, token_decimals)
-    var storage = await getFullStorage(tokensale_contract, fa12_address);
-    storage_assert(storage, true, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
-    const correct_delta_tokens = get_token_amount(toFloat(total_base_asset_amount), toFloat(total_token_amount), toFloat(purchase_base_asset_amount), toFloat(1) - toFloat(token_weight), toFloat(token_weight))
-    console.log(toNumber(correct_delta_tokens, token_decimals));
+    await approveTransfer(standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals)
+    await openSale(tokensaleContract, fa12Address, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals);
+    await approveTransfer(standartTokenContract, tokensaleAddress, 0, tokenDecimals)
+    var storage = await getFullStorage(tokensaleContract, fa12Address);
+    storageAssert(storage, true, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
+    const correctDeltaTokens = getTokenAmount(toFloat(totalBaseAssetAmount), toFloat(totalTokenAmount), toFloat(purchaseBaseAssetAmount), toFloat(1) - toFloat(tokenWeight), toFloat(tokenWeight))
     
-    await buy_token(tokensale_contract, purchase_base_asset_amount, fa12_address)
-    var storage = await getFullStorage(tokensale_contract, fa12_address);
+    await buyToken(tokensaleContract, purchaseBaseAssetAmount, fa12Address)
+    var storage = await getFullStorage(tokensaleContract, fa12Address);
     
-    total_token_amount -= toNumber(correct_delta_tokens, token_decimals);
-    total_base_asset_amount += purchase_base_asset_amount
-    storage_assert(storage, true, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight)
+    totalTokenAmount -= toNumber(correctDeltaTokens, tokenDecimals);
+    totalBaseAssetAmount += purchaseBaseAssetAmount
+    storageAssert(storage, true, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight)
     
-    await close_sale(tokensale_contract, fa12_address);
-    storage = await getFullStorage(tokensale_contract, fa12_address);
-    storage_assert(storage, false, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
+    await closeSale(tokensaleContract, fa12Address);
+    storage = await getFullStorage(tokensaleContract, fa12Address);
+    storageAssert(storage, false, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
 }
 
-const test_invalid_token = async() => {
-    const {Tezos, tokensale_address} = await getAccounts();
-    const tokensale_contract = await getContract(Tezos, tokensale_address);
-    const fa12_invalid = 'tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb'
+const testInvalidToken = async() => {
+    const {Tezos, tokensaleAddress} = await getAccounts();
+    const tokensaleContract = await getContract(Tezos, tokensaleAddress);
+    const fa12Invalid = 'tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb'
 
-    const {total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals} = await getTestInput();
+    const {totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals} = await getTestInput();
     
     let thrown = false;
     try {
-        await open_sale(tokensale_contract, fa12_invalid, total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals);
+        await openSale(tokensaleContract, fa12Invalid, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals);
     } catch (ex) {
         thrown = true;
         assert(ex.message == "Contract for this token not found.")
@@ -259,14 +168,14 @@ const test_invalid_token = async() => {
     assert(thrown)
 }
 
-const test_purchuase_non_existing_token = async() => {
-    const {Tezos, tokensale_address} = await getAccounts();
-    const tokensale_contract = await getContract(Tezos, tokensale_address);
-    let fa12_address = 'KT1HE3TujvVFFUUCo7DvGRqtr9sovcJ3pwkh'
-    let purchase_base_asset_amount = 10;
-    thrown = false;
+const testPurchuaseNonExistingToken = async() => {
+    const {Tezos, tokensaleAddress} = await getAccounts();
+    const tokensaleContract = await getContract(Tezos, tokensaleAddress);
+    let fa12Address = 'KT1HE3TujvVFFUUCo7DvGRqtr9sovcJ3pwkh'
+    let purchaseBaseAssetAmount = 10;
+    let thrown = false;
     try {
-        await buy_token(tokensale_contract, purchase_base_asset_amount, fa12_address)
+        await buyToken(tokensaleContract, purchaseBaseAssetAmount, fa12Address)
     } catch(ex) {
         thrown = true;
         assert(ex.message == 'No such token')
@@ -274,80 +183,79 @@ const test_purchuase_non_existing_token = async() => {
     assert(thrown)
 }
 
-const test_purchuase_after_closure = async() => {
-    const {Tezos, tokensale_address, fa12_address} = await getAccounts();
-    const tokensale_contract = await getContract(Tezos, tokensale_address);
-    const standart_token_contract = await getContract(Tezos, fa12_address);
+const testPurchuaseAfterClosure = async() => {
+    const {Tezos, tokensaleAddress, fa12Address} = await getAccounts();
+    const tokensaleContract = await getContract(Tezos, tokensaleAddress);
+    const standartTokenContract = await getContract(Tezos, fa12Address);
     
-    let total_token_amount = 2000;
-    let total_base_asset_amount = 40;
-    let purchase_base_asset_amount = 10;
-    const {close_date, token_weight, token_decimals, asset_decimals} = await getTestInput();
+    let totalTokenAmount = 2000;
+    let totalBaseAssetAmount = 40;
+    let purchaseBaseAssetAmount = 10;
+    const {closeDate, tokenWeight, tokenDecimals, assetDecimals} = await getTestInput();
 
-    await approve_transfer(standart_token_contract, tokensale_address, total_token_amount, token_decimals)
-    await open_sale(tokensale_contract, fa12_address, total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals);
-    await approve_transfer(standart_token_contract, tokensale_address, 0, token_decimals)
-    var storage = await getFullStorage(tokensale_contract, fa12_address);
-    storage_assert(storage, true, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
+    await approveTransfer(standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals)
+    await openSale(tokensaleContract, fa12Address, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals);
+    await approveTransfer(standartTokenContract, tokensaleAddress, 0, tokenDecimals)
+    var storage = await getFullStorage(tokensaleContract, fa12Address);
+    storageAssert(storage, true, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
     
-    await close_sale(tokensale_contract, fa12_address);
-    storage = await getFullStorage(tokensale_contract, fa12_address);
-    storage_assert(storage, false, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
-    thrown = false
+    await closeSale(tokensaleContract, fa12Address);
+    storage = await getFullStorage(tokensaleContract, fa12Address);
+    storageAssert(storage, false, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
+    let thrown = false
     try {
-        await buy_token(tokensale_contract, purchase_base_asset_amount, fa12_address)
+        await buyToken(tokensaleContract, purchaseBaseAssetAmount, fa12Address)
     } catch(ex) {
         thrown = true
         assert(ex.message == 'Tokensale is closed')
-        storage = await getFullStorage(tokensale_contract, fa12_address);
-        storage_assert(storage, false, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight)
+        storage = await getFullStorage(tokensaleContract, fa12Address);
+        storageAssert(storage, false, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight)
     }
     assert(thrown)
 }
 
-const test_many_purchasings = async() => {
-    const {Tezos, Tezos1, tokensale_address, fa12_address} = await getAccounts();
-    const tokensale = await getContract(Tezos, tokensale_address);
-    const tokensale1 = await getContract(Tezos1, tokensale_address);
-    const standart_token_contract = await getContract(Tezos, fa12_address);
+const testManyPurchasings = async() => {
+    const {Tezos, Tezos1, tokensaleAddress, fa12Address} = await getAccounts();
+    const tokensale = await getContract(Tezos, tokensaleAddress);
+    const tokensale1 = await getContract(Tezos1, tokensaleAddress);
+    const standartTokenContract = await getContract(Tezos, fa12Address);
     
-    let total_token_amount = 2000;
-    let total_base_asset_amount = 40;
-    let purchase_base_asset = [10, 14, 87, 7];
-    const {close_date, token_weight, token_decimals, asset_decimals} = await getTestInput();
+    let totalTokenAmount = 2000;
+    let totalBaseAssetAmount = 40;
+    let purchaseBaseAsset = [10, 14, 87, 7, 43, 107];
+    const {closeDate, tokenWeight, tokenDecimals, assetDecimals} = await getTestInput();
     
-    await approve_transfer(standart_token_contract, tokensale_address, total_token_amount, token_decimals)
-    await open_sale(tokensale, fa12_address, total_token_amount, total_base_asset_amount, close_date, token_weight, token_decimals, asset_decimals);
-    await approve_transfer(standart_token_contract, tokensale_address, 0, token_decimals)
-    var storage = await getFullStorage(tokensale, fa12_address);
-    storage_assert(storage, true, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
+    await approveTransfer(standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals)
+    await openSale(tokensale, fa12Address, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenDecimals, assetDecimals);
+    await approveTransfer(standartTokenContract, tokensaleAddress, 0, tokenDecimals)
+    var storage = await getFullStorage(tokensale, fa12Address);
+    storageAssert(storage, true, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
     
-    for (let i = 0; i < 4; ++i) {
-        let purchase_base_asset_amount = purchase_base_asset[i]
-        const correct_delta_tokens = get_token_amount(toFloat(total_base_asset_amount), toFloat(total_token_amount), toFloat(purchase_base_asset_amount), toFloat(1) - toFloat(token_weight), toFloat(token_weight))
-        console.log(toNumber(correct_delta_tokens, token_decimals))
+    for (let i = 0; i < purchaseBaseAsset.length; ++i) {
+        let purchaseBaseAssetAmount = purchaseBaseAsset[i]
+        const correctDeltaTokens = getTokenAmount(toFloat(totalBaseAssetAmount), toFloat(totalTokenAmount), toFloat(purchaseBaseAssetAmount), toFloat(1) - toFloat(tokenWeight), toFloat(tokenWeight))
         
-        await buy_token(tokensale1, purchase_base_asset_amount, fa12_address)
-        var storage = await getFullStorage(tokensale1, fa12_address);
-        total_token_amount -= toNumber(correct_delta_tokens, token_decimals)
-        total_base_asset_amount += purchase_base_asset_amount
-        storage_assert(storage, true, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight)
+        await buyToken(tokensale1, purchaseBaseAssetAmount, fa12Address)
+        var storage = await getFullStorage(tokensale1, fa12Address);
+        totalTokenAmount -= toNumber(correctDeltaTokens, tokenDecimals)
+        totalBaseAssetAmount += purchaseBaseAssetAmount
+        storageAssert(storage, true, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight)
     }
 
-    await close_sale(tokensale, fa12_address);
-    storage = await getFullStorage(tokensale, fa12_address);
-    storage_assert(storage, false, total_token_amount, total_base_asset_amount, fa12_address, close_date, token_weight);
+    await closeSale(tokensale, fa12Address);
+    storage = await getFullStorage(tokensale, fa12Address);
+    storageAssert(storage, false, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight);
 }
 
-const execute_tests = async () => {
+const executeTests = async () => {
     const tests = [
-        () => test_open_twice(),
-        () => test_close_closed(),
-        () => test_token_purchase(),
-        () => test_invalid_token(),
-        () => test_purchuase_non_existing_token(),
-        () => test_purchuase_after_closure(),
-        () => test_many_purchasings(),
+        () => testOpenTwice(),
+        () => testCloseClosed(),
+        () => testTokenPurchase(),
+        () => testInvalidToken(),
+        () => testPurchuaseNonExistingToken(),
+        () => testPurchuaseAfterClosure(),
+        () => testManyPurchasings(),
     ];
     for (let test of tests) {
         await test()
@@ -355,7 +263,7 @@ const execute_tests = async () => {
 }
 
 try {
-    execute_tests().catch(console.log);
+    executeTests().catch(console.log);
 } catch (ex) { 
     console.log(ex)
     throw "Tests were not passed"

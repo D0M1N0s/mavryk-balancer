@@ -1,8 +1,8 @@
-const { TezosToolkit } = require('@taquito/taquito')
-const { importKey } = require('@taquito/signer')
-const { MichelsonMap } = require('@taquito/taquito')
+import { TezosToolkit, MichelsonMap } from '@taquito/taquito'
+import { importKey } from '@taquito/signer'
 
-const fs = require("fs");
+import fs  from "fs";
+
 const provider = 'https://rpc.tzkt.io/hangzhou2net/'
 const { email, password, mnemonic, activation_code } = JSON.parse(fs.readFileSync('../hangzhounet.json').toString())
 const FA2_compiled_code = "../build/fa2_swapper.tz"
