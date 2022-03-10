@@ -1,1 +1,5 @@
-### This folder contains the library for arithmetic operations with float numbers, which are represented as float number multiplied by c_PRECISION. For instance, 1 is represented as c_PRECISION.
+### This folder contains the library for arithmetic operations with float numbers.
+
+Float numbers are represented as digital part multiplied by c_PRECISION, where c_PRECISION is a constant of precision. 
+
+For example, 2 will be represented as 2 * c_PRECISION.

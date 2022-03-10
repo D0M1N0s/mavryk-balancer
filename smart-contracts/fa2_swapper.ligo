@@ -17,11 +17,14 @@ type token is record [
     token_symbol : string;
 ]
 
-type storage is big_map (address, token)
+type storage is record[
+    token_list: big_map (address, token);
+    admin : address;
+]
 
-type buyTokenParameter is nat * address
+type buyTokenParameter is nat * address * address
 type closeSaleParameter is address
-type openSaleParameter is  address * float * float * timestamp * weights_t * nat * nat * nat * string
+type openSaleParameter is  address * float * float * timestamp * weights_t * nat * nat * nat * string * address
 
 type balancerEntrypoint is
     | OpenSale of openSaleParameter
@@ -40,17 +43,20 @@ function open_sale( var token_address : address;
                     var token_decimals : nat;
                     var based_asset_decimals : nat;
                     var token_symbol : string;
+                    var token_issuer : address;
                     var store : storage)  
                     : returnType is
 block {
-    case store[token_address] of
+    if Tezos.sender =/= store.admin then failwith("Not admin");
+    else skip;
+    case store.token_list[token_address] of
         | Some(val) -> block {
             if val.token_sale_is_open then failwith ("Tokensale is already open");
             else skip;
             }
         | None -> skip
     end;
-    store[token_address] := record [
+    store.token_list[token_address] := record [
         address = token_address;
         close_date  = close_date;
         weights = weights;
@@ -81,7 +87,7 @@ block {
                 token_id = token_id]];
 
     var transfer_param : transferType := list [record[
-                from_ = Tezos.sender; 
+                from_ = token_issuer; 
                 txs = tsx]]; 
     const op : operation = Tezos.transaction(transfer_param, 0mutez, token_contract);
     const operations : list (operation) = list [op];
@@ -102,9 +108,14 @@ block {
     var delta_token_o : float := mul_floats(reserve_token_o, sub_res);
 } with delta_token_o;
   
-function buy_token (var base_asset_amnt : nat; var token_address : address; var store : storage) : returnType is
+function buy_token (var base_asset_amnt : nat; 
+                    var token_address : address; 
+                    var reciever : address; 
+                    var store : storage) : returnType is
 block {
-    var cur_token : token := case store[token_address] of
+    if Tezos.sender =/= store.admin then failwith("Not admin");
+    else skip;
+    var cur_token : token := case store.token_list[token_address] of
         | Some(val) -> val
         | None -> failwith("No such token")
     end;
@@ -130,7 +141,7 @@ block {
     else
         token_amnt := token_amnt * divisor;
       
-    var reciever : address := Tezos.sender; // hmm, the function to buy will be called from which address?
+    // var reciever : address := Tezos.sender; // hmm, the function to buy will be called from which address?
 
     var tsx : list(transfer_destination) := list[record[
                 amount = token_amnt; 
@@ -151,13 +162,15 @@ block {
     
     cur_token.total_token_amount := abs(cur_token.total_token_amount - token_amnt);
     cur_token.total_based_asset_amount := cur_token.total_based_asset_amount + base_asset_amnt;
-    store[token_address] := cur_token;
+    store.token_list[token_address] := cur_token;
 } with (operations, store)
     
 
 function close_sale (var token_address : address; var store : storage) : returnType is
 block {
-    var cur_token : token := case store[token_address] of
+    if Tezos.sender =/= store.admin then failwith("Not admin");
+    else skip;
+    var cur_token : token := case store.token_list[token_address] of
         | Some(val) -> val
         | None -> failwith("No such token in tokensale")
     end;
@@ -168,13 +181,13 @@ block {
         failwith("Closing time hasn't come yet");
     } else skip;
     cur_token.token_sale_is_open := False;
-    store[token_address] := cur_token;
+    store.token_list[token_address] := cur_token;
     // add burning tokens and sending money to issuer
 } with ((nil : list (operation)), store)
 
 function main (var action : balancerEntrypoint; var store : storage): returnType is
     case action of
-        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, param.5, param.6, param.7, param.8, store)
-        | BuyToken (param) -> buy_token(param.0, param.1, store)
+        | OpenSale (param) -> open_sale (param.0, param.1, param.2, param.3, param.4, param.5, param.6, param.7, param.8, param.9, store)
+        | BuyToken (param) -> buy_token(param.0, param.1, param.2, store)
         | CloseSale (param) -> close_sale (param, store)
     end

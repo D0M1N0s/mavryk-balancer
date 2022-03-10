@@ -4,7 +4,7 @@ import { importKey } from '@taquito/signer'
 import fs  from "fs";
 
 const provider = 'https://rpc.tzkt.io/hangzhou2net/'
-const { email, password, mnemonic, activation_code } = JSON.parse(fs.readFileSync('../hangzhounet.json').toString())
+const { pkh, email, password, mnemonic, activation_code } = JSON.parse(fs.readFileSync('../hangzhounet.json').toString())
 const FA2_compiled_code = "../build/fa2_swapper.tz"
 const FA12_compiled_code = "../build/fa12_swapper.tz"
 
@@ -20,7 +20,10 @@ const deploy_tokensale = async (path, standart) => {
     try {
         const op = await tezos.contract.originate({
             code: fs.readFileSync(path, "utf-8").toString(),
-            storage: new MichelsonMap(),
+            storage: {
+                token_list : new MichelsonMap(),
+                admin : pkh
+            },
             balance : '0.3'
         })
         console.log('Awaiting confirmation...')
