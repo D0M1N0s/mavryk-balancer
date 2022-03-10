@@ -25,10 +25,13 @@ import SkeletonTradingCard from 'ui-component/cards/Skeleton/SkeletonCard';
 import store from 'store';
 import MainCard from 'ui-component/cards/MainCard';
 import Countdown from 'react-countdown';
+import { TezosToolkit } from '@taquito/taquito';
 
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
 
 const C_PRECISION = 10 ** 10;
+const Tezos = new TezosToolkit('https://rpc.tzkt.io/hangzhou2net/');
+
 function ToFloat(value) {
     return Math.floor(value * C_PRECISION);
 }
@@ -182,6 +185,28 @@ const TradingCard = ({ isLoading }) => {
         setValues({ ...values, exchange_rate: rate, based_asset_input: final, [prop]: event.target.value });
     };
 
+    const buyTokenFA12 = async (wallet, tokensaleAddress, purchaseBaseAssetAmount, fa12Address) => {
+        Tezos.setWalletProvider(wallet);
+        const tokensale = await Tezos.contract.at(tokensaleAddress);
+        const op = await tokensale.methods.buyToken(ToFloat(purchaseBaseAssetAmount), fa12Address).send();
+        await op.confirmation();
+        if (op.status !== 'applied') {
+            console.log('operation was not applied');
+        }
+        Tezos.setWalletProvider();
+    };
+
+    const buyTokenFA2 = async (wallet, tokensaleAddress, purchaseBaseAssetAmount, fa2Address) => {
+        Tezos.setWalletProvider(wallet);
+        const tokensale = await Tezos.contract.at(tokensaleAddress);
+        const op = await tokensale.methods.buyToken(ToFloat(purchaseBaseAssetAmount), fa2Address).send();
+        await op.confirmation();
+        if (op.status !== 'applied') {
+            console.log('operation was not applied');
+        }
+        Tezos.setWalletProvider();
+    };
+
     return (
         <>
             {isLoading ? (
@@ -209,15 +234,15 @@ const TradingCard = ({ isLoading }) => {
                                 <OutlinedInput
                                     sx={{ width: '100%' }}
                                     id="input-token"
+                                    type="number"
                                     value={values.token_input}
                                     onChange={handleChange('token_input')}
                                     endAdornment={
                                         <InputAdornment position="start">
                                             <Chip
-                                                icon={<ChangeCircleIcon />}
                                                 label={
                                                     <Typography variant="h4" align="center">
-                                                        Tezos
+                                                        {values.based_asset_name}
                                                     </Typography>
                                                 }
                                                 variant="outlined"
