@@ -71,17 +71,22 @@ function getTokenAmount(reserveTokenI, reserveTokenO, deltaTokenI, weightI, weig
 
 const getFullStorage = async (contract, tokenAddress) => {
     const storage = await contract.storage();
-    return storage.get(tokenAddress);
+    return {
+        admin : storage.admin,
+        token_list : await storage.token_list.get(tokenAddress)
+    };
 }
 
-function storageAssert(storage, tokensaleStatus, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight){
-    assert(storage.token_sale_is_open == tokensaleStatus, `tokensale status: ${storage.token_sale_is_open}; expected: ${tokensaleStatus}`)
-    assert(equal(storage.total_token_amount, toFloat(totalTokenAmount)), `total_token_amount: ${storage.total_token_amount}; expected: ${toFloat(totalTokenAmount)}`)
-    assert(equal(storage.total_based_asset_amount, toFloat(totalBaseAssetAmount)), `total_based_asset_amount: ${storage.total_based_asset_amount}; expected: ${toFloat(totalBaseAssetAmount)}`)
-    assert(storage.address == fa12Address, `token address: ${storage.address}; expected: ${fa12Address}`)
-    assert(storage.close_date == closeDate, `close_date: ${storage.closeDate}; expected: ${closeDate}`)
-    assert(storage.weights.token_weight['c'][0] == toFloat(tokenWeight), `token_weight: ${storage.weights.token_weight['c'][0]}; expected: ${tokenWeight}`)
-    assert(storage.weights.base_asset_weight['c'][0] == toFloat(1) - toFloat(tokenWeight), `base_asset_weight: ${storage.weights.base_asset_weight['c'][0]}; expected: ${toFloat(1) - toFloat(tokenWeight)}`)
+function storageAssert(storage, admin, tokensaleStatus, totalTokenAmount, totalBaseAssetAmount, fa12Address, closeDate, tokenWeight){
+    assert(storage.admin == admin, `admin: ${storage.admin}; expected: ${admin}`);
+    let token_list = storage.token_list;
+    assert(token_list.token_sale_is_open == tokensaleStatus, `tokensale status: ${token_list.token_sale_is_open}; expected: ${tokensaleStatus}`)
+    assert(equal(token_list.total_token_amount, toFloat(totalTokenAmount)), `total_token_amount: ${token_list.total_token_amount}; expected: ${toFloat(totalTokenAmount)}`)
+    assert(equal(token_list.total_based_asset_amount, toFloat(totalBaseAssetAmount)), `total_based_asset_amount: ${token_list.total_based_asset_amount}; expected: ${toFloat(totalBaseAssetAmount)}`)
+    assert(token_list.address == fa12Address, `token address: ${token_list.address}; expected: ${fa12Address}`)
+    assert(token_list.close_date == closeDate, `close_date: ${token_list.closeDate}; expected: ${closeDate}`)
+    assert(token_list.weights.token_weight['c'][0] == toFloat(tokenWeight), `token_weight: ${token_list.weights.token_weight['c'][0]}; expected: ${tokenWeight}`)
+    assert(token_list.weights.base_asset_weight['c'][0] == toFloat(1) - toFloat(tokenWeight), `base_asset_weight: ${token_list.weights.base_asset_weight['c'][0]}; expected: ${toFloat(1) - toFloat(tokenWeight)}`)
 }
 
 const createTezosFromHangzhou = async (path) => {

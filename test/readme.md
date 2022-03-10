@@ -8,3 +8,4 @@ The tests for contracts are similar:
 - Test for issuing an error in case of buying a token without an open token sale
 - Test for throwing an error in case of attemption to buy token after tokensale closure
 - Test for correct automated maker work
+- Test for the inability to call entry points from a non-administrator account
