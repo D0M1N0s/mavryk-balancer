@@ -87,6 +87,8 @@ export const tokenState = [
 
 const tokenOperations = (state = tokenState, action) => {
     switch (action.type) {
+        case 'initialiseTokenState':
+            return action.payload;
         case 'openSale':
             return [
                 ...state,
