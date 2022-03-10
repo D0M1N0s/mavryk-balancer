@@ -90,17 +90,17 @@ function FromFloatToNumber(value, decimals) {
 const TradingCard = ({ isLoading }) => {
     const [open, setOpen] = React.useState(false);
     const [values, setValues] = React.useState({
-        token_input: 0,
-        token_amount: store.getState().tokens[0].token_amount,
-        token_weight: store.getState().tokens[0].token_weight,
-        token_address: store.getState().tokens[0].token_address,
-        token_name: store.getState().tokens[0].token_name,
-        based_asset_input: 0,
-        based_asset_amount: store.getState().tokens[0].based_asset_amount,
-        based_asset_weight: store.getState().tokens[0].based_asset_weight,
-        based_asset_address: store.getState().tokens[0].based_asset_name,
-        based_asset_name: store.getState().tokens[0].based_asset_name,
-        close_date: store.getState().tokens[0].close_date,
+        token_input: null,
+        token_amount: null,
+        token_weight: null,
+        token_address: null,
+        token_name: null,
+        based_asset_input: null,
+        based_asset_amount: null,
+        based_asset_weight: null,
+        based_asset_address: null,
+        based_asset_name: null,
+        close_date: null,
         exchange_rate: 'N/A'
     });
 
@@ -143,8 +143,7 @@ const TradingCard = ({ isLoading }) => {
     };
 
     const handleClick = () => {
-        console.log(values.token_input);
-        console.log(values.based_asset_input);
+        console.log('what');
     };
 
     const handleListItemClick = (event, currentToken) => {
