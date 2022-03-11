@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import * as React from 'react';
+import { useEffect } from 'react';
 
 // material-ui
 import {
@@ -74,11 +75,19 @@ function PowFloats(a, power) {
 // Returns the recieved by user amount of tokens multiplyed by C_PRECISION
 // To get "normal" delta need to use FromFloatToNumber with necessary decimals of issuer's token
 function GetTokenAmount(reserveTokenI, reserveTokenO, deltaTokenI, weightI, weightO) {
+    console.log('something');
+    console.log(reserveTokenI);
+    console.log(reserveTokenO);
+    console.log(deltaTokenI);
+    console.log(weightI);
+    console.log(weightO);
+
     const fraction = Div(reserveTokenI, reserveTokenI + deltaTokenI);
     const power = Div(weightI, weightO);
     const fractionRoot = PowFloats(fraction, power);
     const subRes = 1 * C_PRECISION - fractionRoot;
     const deltaTokenO = Mul(reserveTokenO, subRes);
+    console.log('deltaTokenO', deltaTokenO);
     return deltaTokenO;
 }
 function FromFloatToNumber(value, decimals) {
@@ -90,14 +99,14 @@ function FromFloatToNumber(value, decimals) {
 const TradingCard = ({ isLoading }) => {
     const [open, setOpen] = React.useState(false);
     const [values, setValues] = React.useState({
-        token_input: null,
-        token_amount: null,
-        token_weight: null,
+        token_input: 0,
+        token_amount: 0,
+        token_weight: 0,
         token_address: null,
         token_name: null,
-        based_asset_input: null,
-        based_asset_amount: null,
-        based_asset_weight: null,
+        based_asset_input: 0,
+        based_asset_amount: 0,
+        based_asset_weight: 0,
         based_asset_address: null,
         based_asset_name: null,
         close_date: null,
@@ -129,13 +138,17 @@ const TradingCard = ({ isLoading }) => {
     };
 
     const calculateExchangeRate = () => {
+        console.log(values.based_asset_amount);
+        console.log(values.token_amount);
+        console.log(values.based_asset_weight);
+        console.log(values.token_weight);
         const exchangeRate = FromFloatToNumber(
             GetTokenAmount(
-                ToFloat(values.token_amount),
                 ToFloat(values.based_asset_amount),
+                ToFloat(values.token_amount),
                 ToFloat(1),
-                values.token_weight,
-                values.based_asset_weight
+                values.based_asset_weight,
+                values.token_weight
             ),
             20
         );
@@ -143,23 +156,33 @@ const TradingCard = ({ isLoading }) => {
     };
 
     const handleClick = () => {
-        console.log('what');
+        console.log('handleClick');
+        const calculated = GetTokenAmount(
+            ToFloat(values.based_asset_amount),
+            ToFloat(values.token_amount),
+            ToFloat(values.based_asset_input),
+            ToFloat(values.based_asset_weight),
+            ToFloat(values.token_weight)
+        );
+        const final = FromFloatToNumber(calculated, 20);
+        console.log('output:', final);
     };
 
     const handleListItemClick = (event, currentToken) => {
-        console.log(currentToken);
         const token = store.getState().tokens.filter((token) => token.token_address === currentToken);
-        const rate = calculateExchangeRate();
         setValues({
             ...values,
+            token_input: 0,
+            token_amount: token[0].token_amount,
             token_weight: token[0].token_weight,
             token_address: token[0].token_address,
             token_name: token[0].token_name,
+            based_asset_input: 0,
+            based_asset_amount: token[0].based_asset_amount,
             based_asset_weight: token[0].based_asset_weight,
             based_asset_address: token[0].based_asset_address,
             based_asset_name: token[0].based_asset_name,
-            close_date: token[0].close_date,
-            exchange_rate: rate
+            close_date: token[0].close_date
         });
         store.dispatch({
             type: 'setToken',
@@ -171,17 +194,7 @@ const TradingCard = ({ isLoading }) => {
     };
 
     const handleChange = (prop) => (event) => {
-        const calculated = GetTokenAmount(
-            ToFloat(values.token_amount),
-            ToFloat(values.based_asset_amount),
-            ToFloat(event.target.value),
-            values.token_weight,
-            values.based_asset_weight
-        );
-        const final = FromFloatToNumber(calculated, 20);
-        const rate = calculateExchangeRate();
-        console.log(final);
-        setValues({ ...values, exchange_rate: rate, based_asset_input: final, [prop]: event.target.value });
+        setValues({ ...values, [prop]: event.target.value });
     };
 
     const buyTokenFA12 = async (wallet, tokensaleAddress, purchaseBaseAssetAmount, fa12Address) => {
@@ -234,8 +247,8 @@ const TradingCard = ({ isLoading }) => {
                                     sx={{ width: '100%' }}
                                     id="input-token"
                                     type="number"
-                                    value={values.token_input}
-                                    onChange={handleChange('token_input')}
+                                    value={values.based_asset_input}
+                                    onChange={handleChange('based_asset_input')}
                                     endAdornment={
                                         <InputAdornment position="start">
                                             <Chip
@@ -274,8 +287,8 @@ const TradingCard = ({ isLoading }) => {
                                     disabled
                                     sx={{ width: '100%' }}
                                     id="input-token"
-                                    value={values.based_asset_input}
-                                    onChange={handleChange('based_asset_input')}
+                                    value={values.token_input}
+                                    onChange={handleChange('token_input')}
                                     endAdornment={
                                         <InputAdornment
                                             position="end"
