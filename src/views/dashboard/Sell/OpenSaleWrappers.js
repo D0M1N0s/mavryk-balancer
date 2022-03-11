@@ -113,7 +113,7 @@ const openSaleFA2 = async (
     totalBaseAssetAmount,
     closeDate,
     tokenWeight, // to fetch
-    tokenId,    // to fetch
+    tokenId, // to fetch
     tokenDecimals,
     assetDecimals,
     tokenSymbol,

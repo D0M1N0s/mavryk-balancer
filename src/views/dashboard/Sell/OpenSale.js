@@ -66,7 +66,39 @@ const OpenSale = ({ isLoading }) => {
         }
         return 'undefined';
     }
-
+    async function bytesToString(bytes) {
+        const result = [];
+        for (let i = 0; i < bytes.length; i += 2) {
+            result.push(String.fromCharCode(parseInt(bytes.substr(i, 2), 16)));
+        }
+        return result.join('');
+    }
+    async function GetTokenDecimals(tokenAddress, tokenId) {
+        const storageUrl = `https://api.hangzhou2net.tzkt.io/v1/contracts/${tokenAddress}/bigmaps/token_metadata/keys`;
+        const token = new XMLHttpRequest();
+        token.responseType = 'json';
+        token.open('GET', storageUrl);
+        token.send();
+        let decimals = 0;
+        token.onreadystatechange = async () => {
+            if (token.response !== null) {
+                const tokenList = token.response;
+                console.log('response:', tokenList);
+                let bytes = null;
+                for (let i = 0; i < tokenList.length; i += 1) {
+                    if (parseInt(tokenList[i].value.token_id, 10) === tokenId) {
+                        if (tokenList[i].value.token_info !== undefined) {
+                            bytes = tokenList[i].value.token_info.decimals;
+                        }
+                    }
+                }
+                if (bytes != null) {
+                    decimals = await bytesToString(bytes);
+                }
+            }
+        };
+        return parseInt(decimals, 10);
+    }
     const [open, setOpen] = React.useState(false);
     const [values, setValues] = React.useState({
         token_address: '',
@@ -75,7 +107,8 @@ const OpenSale = ({ isLoading }) => {
         based_asset_address: '',
         based_asset_name: 'XTZ',
         based_asset_amount: 0,
-        close_date: null
+        close_date: null,
+        token_weight: null
     });
 
     const handleClickOpen = () => {
@@ -109,12 +142,18 @@ const OpenSale = ({ isLoading }) => {
         console.log(map);
         console.log(values);
         const standard = await TokenStandard(values.token_address);
+        console.log('store:', store.getState());
         const wallet = store.getState().wallet.wallet;
         console.log('wallet info:', wallet, typeof wallet);
-        // console.log(wallet);
+        console.log('store:', store.getState());
+        
+        const tokenDecimals = await GetTokenDecimals(values.token_address, 0); // tokenId to get from user...
+        const assetDecimals = await GetTokenDecimals(values.based_asset_address, 0); // same about tokenId
+        if (wallet === null) {
+            // to show alert of unconnected wallet
+            return;
+        }
         if (standard === 'FA2') {
-            const tokenDecimals = 8; // to fetch!!!
-            const assetDecimals = 6;
             await openSaleFA2(
                 wallet,
                 fa2tokensale.address,
@@ -130,9 +169,7 @@ const OpenSale = ({ isLoading }) => {
                 values.based_asset_address,
                 values.based_asset_name
             );
-        } else {
-            const tokenDecimals = 8; // to fetch!!!
-            const assetDecimals = 6;
+        } else if (standard === 'FA1.2') {
             await openSaleFA12(
                 wallet,
                 fa12tokensale.address,
@@ -147,6 +184,8 @@ const OpenSale = ({ isLoading }) => {
                 values.based_asset_address,
                 values.based_asset_name
             );
+        } else {
+            // need to create alert about undefined token standard
         }
     };
 
