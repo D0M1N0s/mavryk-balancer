@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import * as React from 'react';
+import adminAcc from './hangzhounet.json';
 
 // material-ui
 import DateTimePicker from '@mui/lab/DateTimePicker';
@@ -32,14 +33,10 @@ import MainCard from 'ui-component/cards/MainCard';
 import { TezosToolkit } from '@taquito/taquito';
 
 import { InMemorySigner } from '@taquito/signer';
-import fs from 'fs';
-
 // ===========================|| DASHBOARD DEFAULT - Open Sale ||=========================== //
 
 const OpenSale = ({ isLoading }) => {
     const Tezos = new TezosToolkit('https://rpc.tzkt.io/hangzhou2net/');
-    const adminAccountPath = '../hangzhounet.json';
-    const adminAcc = JSON.parse(fs.readFileSync(adminAccountPath));
     const C_PRECISION = 10000000000;
 
     function toFloat(value) {
