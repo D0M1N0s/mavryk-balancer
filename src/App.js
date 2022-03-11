@@ -30,8 +30,8 @@ const App = () => {
         const fa12Http = new XMLHttpRequest();
         const fa2Http = new XMLHttpRequest();
 
-        const fa12Address = 'KT1QSxCFz7artzTkYWCvri5n35sV5A43jvQ4';
-        const fa2Address = 'KT1WatjZFwunGhNEiarNSWH8nvg5v1aXR1YP';
+        const fa12Address = 'KT1DovnD5m5yZsBns4AwDK2NdZMo7PCsz2oG';
+        const fa2Address = 'KT1C7nJaJooKYY3E7XY2rLa1jKnQBqSx1SFQ';
 
         const fa12StorageUrl = `https://api.hangzhou2net.tzkt.io/v1/contracts/${fa12Address}/bigmaps/token_list/keys`;
         const fa2StorageUrl = `https://api.hangzhou2net.tzkt.io/v1/contracts/${fa2Address}/bigmaps/token_list/keys`;
