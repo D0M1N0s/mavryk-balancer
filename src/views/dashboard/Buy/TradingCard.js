@@ -75,19 +75,11 @@ function PowFloats(a, power) {
 // Returns the recieved by user amount of tokens multiplyed by C_PRECISION
 // To get "normal" delta need to use FromFloatToNumber with necessary decimals of issuer's token
 function GetTokenAmount(reserveTokenI, reserveTokenO, deltaTokenI, weightI, weightO) {
-    console.log('something');
-    console.log(reserveTokenI);
-    console.log(reserveTokenO);
-    console.log(deltaTokenI);
-    console.log(weightI);
-    console.log(weightO);
-
     const fraction = Div(reserveTokenI, reserveTokenI + deltaTokenI);
     const power = Div(weightI, weightO);
     const fractionRoot = PowFloats(fraction, power);
     const subRes = 1 * C_PRECISION - fractionRoot;
     const deltaTokenO = Mul(reserveTokenO, subRes);
-    console.log('deltaTokenO', deltaTokenO);
     return deltaTokenO;
 }
 function FromFloatToNumber(value, decimals) {
@@ -144,11 +136,11 @@ const TradingCard = ({ isLoading }) => {
         console.log(values.token_weight);
         const exchangeRate = FromFloatToNumber(
             GetTokenAmount(
-                ToFloat(values.based_asset_amount),
-                ToFloat(values.token_amount),
+                parseInt(values.based_asset_amount, 10),
+                parseInt(values.token_amount, 10),
                 ToFloat(1),
-                values.based_asset_weight,
-                values.token_weight
+                parseInt(values.based_asset_weight, 10),
+                parseInt(values.token_weight, 10)
             ),
             20
         );
@@ -158,13 +150,14 @@ const TradingCard = ({ isLoading }) => {
     const handleClick = () => {
         console.log('handleClick');
         const calculated = GetTokenAmount(
-            ToFloat(values.based_asset_amount),
-            ToFloat(values.token_amount),
+            parseInt(values.based_asset_amount, 10),
+            parseInt(values.token_amount, 10),
             ToFloat(values.based_asset_input),
-            ToFloat(values.based_asset_weight),
-            ToFloat(values.token_weight)
+            parseInt(values.based_asset_weight, 10),
+            parseInt(values.token_weight, 10)
         );
         const final = FromFloatToNumber(calculated, 20);
+        console.log('input:', values.based_asset_input);
         console.log('output:', final);
     };
 
