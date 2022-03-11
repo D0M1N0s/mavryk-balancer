@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import * as React from 'react';
-import adminAcc from './hangzhounet.json';
+import adminAcc from '../../../json_files/hangzhounet.json';
+import fa12tokensale from '../../../json_files/fa12-latest.json';
+import fa2tokensale from '../../../json_files/fa2-latest.json';
 
 // material-ui
 import DateTimePicker from '@mui/lab/DateTimePicker';
@@ -48,81 +50,22 @@ const OpenSale = ({ isLoading }) => {
             InMemorySigner.fromFundraiser(defaultProvider.email, defaultProvider.password, defaultProvider.mnemonic.join(' '))
         );
     }
-
-    const [open, setOpen] = React.useState(false);
-    const [values, setValues] = React.useState({
-        token_address: '',
-        token_name: '',
-        token_amount: 0,
-        based_asset_address: 'XTZ',
-        based_asset_name: 'XTZ',
-        based_asset_amount: 0,
-        close_date: null
-    });
-
-    const handleClickOpen = () => {
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-    };
-
-    const handleListItemClick = (event, currentToken) => {
-        console.log(currentToken);
-        const token = store.getState().tokens.filter((token) => token.token_address === currentToken);
-        setValues({
-            ...values,
-            based_asset_address: currentToken,
-            based_asset_name: token[0].token_name
-        });
-        store.dispatch({
-            type: 'changeToken',
-            payload: {
-                based_asset_address: currentToken,
-                based_asset_name: token[0].token_name
-            }
-        });
-        handleClose();
-    };
-
-    const openSale = () => {
-        const map = store.getState().tokens.map((x) => x.address);
-        console.log(map);
-    };
-
-    const setTime = (time) => {
-        setValues({ ...values, close_date: time });
-        store.dispatch({
-            type: 'changeToken',
-            payload: {
-                close_date: time
-            }
-        });
-    };
-    const handleChange = (prop) => (event) => {
-        setValues({ ...values, [prop]: event.target.value });
-        store.dispatch({
-            type: 'changeToken',
-            payload: {
-                [prop]: event.target.value
-            }
-        });
-        console.log(store.getState().sale);
-    };
-
-    const approveTransfer = async (standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals) => {
-        const normalizedTokenAmount = Math.floor(totalTokenAmount * 10 ** tokenDecimals);
-        const operation = await standartTokenContract.methods.approve(tokensaleAddress, normalizedTokenAmount).send();
-        await operation.confirmation();
-        if (operation.status !== 'applied') {
-            console.log('operation was not applied');
+    async function TokenStandard(tokanAddress) {
+        setDefaultProvider(adminAcc);
+        const standartTokenContract = await Tezos.contract.at(tokanAddress);
+        const methods = await standartTokenContract.methods;
+        console.log(methods);
+        if (methods.update_operators !== undefined) {
+            return 'FA2';
         }
-        Tezos.setWalletProvider();
-    };
+        if (methods.approve !== undefined) {
+            return 'FA1.2';
+        }
+        return 'undefined';
+    }
 
     const addOperator = async (standartToken, ownerAddress, tokensaleAddress, tokenId) => {
-        // console.log(standartTokenContract.methods)
+        console.log('standart adress:', standartToken);
         const standartTokenContract = await Tezos.contract.at(standartToken);
         const operation = await standartTokenContract.methods
             .update_operators([
@@ -153,7 +96,16 @@ const OpenSale = ({ isLoading }) => {
             .send();
         await operation.confirmation();
     };
-
+    const approveTransfer = async (standartToken, tokensaleAddress, totalTokenAmount, tokenDecimals) => {
+        const standartTokenContract = await Tezos.contract.at(standartToken);
+        console.log('standart:', standartTokenContract);
+        const normalizedTokenAmount = Math.floor(totalTokenAmount * 10 ** tokenDecimals);
+        const operation = await standartTokenContract.methods.approve(tokensaleAddress, normalizedTokenAmount).send();
+        await operation.confirmation();
+        if (operation.status !== 'applied') {
+            console.log('operation was not applied');
+        }
+    };
     const transfer = async (wallet, standartToken, from, to, amount, tokenId, assetDecimals) => {
         Tezos.setWalletProvider(wallet);
         const standartTokenContract = await Tezos.contract.at(standartToken);
@@ -187,47 +139,9 @@ const OpenSale = ({ isLoading }) => {
         }
         setDefaultProvider(adminAcc);
     };
-
-    const openSaleFA12 = async (
-        wallet,
-        tokensaleAddress,
-        fa12Address,
-        totalTokenAmount,
-        totalBaseAssetAmount,
-        closeDate,
-        tokenWeight,
-        tokenDecimals,
-        assetDecimals,
-        tokenSymbol
-    ) => {
-        Tezos.setWalletProvider(wallet);
-        const tokensale = await Tezos.contract.at(tokensaleAddress);
-        await approveTransfer(fa12Address, tokensaleAddress, totalTokenAmount, tokenDecimals);
-        const operation = await tokensale.methods
-            .openSale(
-                fa12Address,
-                toFloat(totalTokenAmount),
-                toFloat(totalBaseAssetAmount),
-                closeDate,
-                toFloat(tokenWeight),
-                toFloat(1) - toFloat(tokenWeight),
-                tokenDecimals,
-                assetDecimals,
-                tokenSymbol
-            )
-            .send();
-
-        await operation.confirmation();
-        if (operation.status !== 'applied') {
-            console.log('operation was not applied');
-        }
-        Tezos.setWalletProvider();
-    };
-
     const openSaleFA2 = async (
         wallet,
         tokensaleAddress,
-        baseAssetAddress,
         fa2Address,
         totalTokenAmount,
         totalBaseAssetAmount,
@@ -240,11 +154,12 @@ const OpenSale = ({ isLoading }) => {
         basedAssetAddress,
         basedAssetName
     ) => {
+        tokenId = 0;
+        tokenWeight = 30;
         await setDefaultProvider(adminAcc);
-        const standartTokenContract = await Tezos.contract.at(fa2Address);
         const tokensale = await Tezos.contract.at(tokensaleAddress);
         const issuerAddress = await wallet.getPKH();
-        await addOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId);
+        await addOperator(fa2Address, issuerAddress, tokensaleAddress, tokenId);
         const openSalePromise = tokensale.methods.openSale(
             fa2Address,
             toFloat(totalTokenAmount),
@@ -260,7 +175,7 @@ const OpenSale = ({ isLoading }) => {
             basedAssetAddress,
             basedAssetName
         );
-        if (baseAssetAddress === '') {
+        if (basedAssetAddress === '') {
             const operation = await openSalePromise.send({ amount: totalBaseAssetAmount });
 
             await operation.confirmation();
@@ -271,10 +186,169 @@ const OpenSale = ({ isLoading }) => {
             await Tezos.wallet
                 .batch()
                 .withContractCall(await openSalePromise)
-                .withContractCall(await transfer(wallet, baseAssetAddress, issuerAddress, tokensaleAddress, totalBaseAssetAmount, tokenId))
+                .withContractCall(await transfer(wallet, basedAssetAddress, issuerAddress, tokensaleAddress, totalBaseAssetAmount, tokenId))
                 .send();
         }
-        await removeOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId);
+        await removeOperator(fa2Address, issuerAddress, tokensaleAddress, tokenId);
+    };
+    const openSaleFA12 = async (
+        wallet,
+        tokensaleAddress,
+        fa12Address,
+        totalTokenAmount,
+        totalBaseAssetAmount,
+        closeDate,
+        tokenWeight,
+        tokenDecimals,
+        assetDecimals,
+        tokenSymbol,
+        baseAssetAddress,
+        baseAssetName
+    ) => {
+        Tezos.setWalletProvider(wallet);
+        const tokensale = await Tezos.contract.at(tokensaleAddress);
+        await approveTransfer(fa12Address, tokensaleAddress, totalTokenAmount, tokenDecimals);
+        console.log(
+            tokensaleAddress,
+            fa12Address,
+            toFloat(totalTokenAmount),
+            toFloat(totalBaseAssetAmount),
+            closeDate,
+            toFloat(tokenWeight),
+            toFloat(1) - toFloat(tokenWeight),
+            tokenDecimals,
+            assetDecimals,
+            tokenSymbol,
+            baseAssetAddress,
+            baseAssetName
+        );
+        if (baseAssetAddress === '') {
+            const operation = await tokensale.methods
+                .openSale(
+                    fa12Address,
+                    toFloat(totalTokenAmount),
+                    toFloat(totalBaseAssetAmount),
+                    closeDate,
+                    toFloat(tokenWeight),
+                    toFloat(1) - toFloat(tokenWeight),
+                    tokenDecimals,
+                    assetDecimals,
+                    tokenSymbol,
+                    await wallet.getPKH(),
+                    baseAssetAddress,
+                    baseAssetName
+                )
+                .send({ amount: totalBaseAssetAmount });
+
+            await operation.confirmation();
+            if (operation.status !== 'applied') {
+                console.log('operation was not applied');
+            }
+        } else {
+            // TODO
+        }
+    };
+    const [open, setOpen] = React.useState(false);
+    const [values, setValues] = React.useState({
+        token_address: '',
+        token_name: '',
+        token_amount: 0,
+        based_asset_address: '',
+        based_asset_name: 'XTZ',
+        based_asset_amount: 0,
+        close_date: null
+    });
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const handleListItemClick = (event, currentToken) => {
+        console.log(currentToken);
+        const token = store.getState().tokens.filter((token) => token.token_address === currentToken);
+        setValues({
+            ...values,
+            based_asset_address: currentToken,
+            based_asset_name: token[0].token_name
+        });
+        store.dispatch({
+            type: 'changeToken',
+            payload: {
+                based_asset_address: currentToken,
+                based_asset_name: token[0].token_name
+            }
+        });
+        handleClose();
+    };
+
+    const openSale = async () => {
+        const map = store.getState().tokens.map((x) => x.address);
+        console.log(map);
+        console.log(values);
+        const standard = await TokenStandard(values.token_address);
+        const wallet = store.getState().wallet.wallet;
+        console.log('wallet info:', wallet, typeof wallet);
+        // console.log(wallet);
+        if (standard === 'FA2') {
+            const tokenDecimals = 8; // to fetch!!!
+            const assetDecimals = 6;
+            await openSaleFA2(
+                wallet,
+                fa2tokensale.address,
+                values.token_address,
+                values.token_amount,
+                values.based_asset_amount,
+                values.close_date,
+                values.token_weight,
+                values.token_id,
+                tokenDecimals,
+                assetDecimals,
+                values.token_name,
+                values.based_asset_address,
+                values.based_asset_name
+            );
+        } else {
+            const tokenDecimals = 8; // to fetch!!!
+            const assetDecimals = 6;
+            await openSaleFA12(
+                wallet,
+                fa12tokensale.address,
+                values.token_address,
+                values.token_amount,
+                values.based_asset_amount,
+                values.close_date,
+                values.token_weight,
+                tokenDecimals,
+                assetDecimals,
+                values.token_name,
+                values.based_asset_address,
+                values.based_asset_name
+            );
+        }
+    };
+
+    const setTime = (time) => {
+        setValues({ ...values, close_date: time });
+        store.dispatch({
+            type: 'changeToken',
+            payload: {
+                close_date: time
+            }
+        });
+    };
+    const handleChange = (prop) => (event) => {
+        setValues({ ...values, [prop]: event.target.value });
+        store.dispatch({
+            type: 'changeToken',
+            payload: {
+                [prop]: event.target.value
+            }
+        });
+        console.log(store.getState().sale);
     };
 
     return (

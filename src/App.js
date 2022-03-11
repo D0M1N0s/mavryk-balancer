@@ -14,6 +14,10 @@ import store from 'store';
 // project imports
 import NavigationScroll from 'layout/NavigationScroll';
 
+// tokensale addresses
+import fa12tokensale from './json_files/fa12-latest.json';
+import fa2tokensale from './json_files/fa2-latest.json';
+
 // ==============================|| APP ||============================== //
 
 const App = () => {
@@ -30,8 +34,8 @@ const App = () => {
         const fa12Http = new XMLHttpRequest();
         const fa2Http = new XMLHttpRequest();
 
-        const fa12Address = 'KT1DovnD5m5yZsBns4AwDK2NdZMo7PCsz2oG';
-        const fa2Address = 'KT1C7nJaJooKYY3E7XY2rLa1jKnQBqSx1SFQ';
+        const fa12Address = fa12tokensale.address; // 'KT1DovnD5m5yZsBns4AwDK2NdZMo7PCsz2oG';
+        const fa2Address = fa2tokensale.address; // 'KT1C7nJaJooKYY3E7XY2rLa1jKnQBqSx1SFQ';
 
         const fa12StorageUrl = `https://api.hangzhou2net.tzkt.io/v1/contracts/${fa12Address}/bigmaps/token_list/keys`;
         const fa2StorageUrl = `https://api.hangzhou2net.tzkt.io/v1/contracts/${fa2Address}/bigmaps/token_list/keys`;
