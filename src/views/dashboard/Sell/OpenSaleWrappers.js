@@ -112,16 +112,14 @@ const openSaleFA2 = async (
     totalTokenAmount,
     totalBaseAssetAmount,
     closeDate,
-    tokenWeight,
-    tokenId,
+    tokenWeight, // to fetch
+    tokenId,    // to fetch
     tokenDecimals,
     assetDecimals,
     tokenSymbol,
     basedAssetAddress,
     basedAssetName
 ) => {
-    tokenId = 0;
-    tokenWeight = 30;
     await setDefaultProvider(adminAcc);
     const tokensale = await Tezos.contract.at(tokensaleAddress);
     const issuerAddress = await wallet.getPKH();
