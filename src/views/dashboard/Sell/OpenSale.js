@@ -31,14 +31,25 @@ import store from 'store';
 import MainCard from 'ui-component/cards/MainCard';
 import { TezosToolkit } from '@taquito/taquito';
 
+import { InMemorySigner } from '@taquito/signer';
+import fs from 'fs';
+
 // ===========================|| DASHBOARD DEFAULT - Open Sale ||=========================== //
 
 const OpenSale = ({ isLoading }) => {
     const Tezos = new TezosToolkit('https://rpc.tzkt.io/hangzhou2net/');
+    const adminAccountPath = '../hangzhounet.json';
+    const adminAcc = JSON.parse(fs.readFileSync(adminAccountPath));
     const C_PRECISION = 10000000000;
 
     function toFloat(value) {
         return Math.floor(value * C_PRECISION);
+    }
+
+    async function setDefaultProvider(defaultProvider) {
+        await Tezos.setSignerProvider(
+            InMemorySigner.fromFundraiser(defaultProvider.email, defaultProvider.password, defaultProvider.mnemonic.join(' '))
+        );
     }
 
     const [open, setOpen] = React.useState(false);
@@ -113,10 +124,9 @@ const OpenSale = ({ isLoading }) => {
         Tezos.setWalletProvider();
     };
 
-    const addOperator = async (standartTokenContract, ownerAddress, tokensaleAddress, tokenId) => {
-        /*
-         * Gives permission to use wallets funds.
-         */
+    const addOperator = async (standartToken, ownerAddress, tokensaleAddress, tokenId) => {
+        // console.log(standartTokenContract.methods)
+        const standartTokenContract = await Tezos.contract.at(standartToken);
         const operation = await standartTokenContract.methods
             .update_operators([
                 {
@@ -131,10 +141,8 @@ const OpenSale = ({ isLoading }) => {
         await operation.confirmation();
     };
 
-    const removeOperator = async (standartTokenContract, ownerAddress, tokensaleAddress, tokenId) => {
-        /**
-         *  Removes permission to move wallet funds.
-         */
+    const removeOperator = async (standartToken, ownerAddress, tokensaleAddress, tokenId) => {
+        const standartTokenContract = await Tezos.contract.at(standartToken);
         const operation = await standartTokenContract.methods
             .update_operators([
                 {
@@ -147,6 +155,40 @@ const OpenSale = ({ isLoading }) => {
             ])
             .send();
         await operation.confirmation();
+    };
+
+    const transfer = async (wallet, standartToken, from, to, amount, tokenId, assetDecimals) => {
+        Tezos.setWalletProvider(wallet);
+        const standartTokenContract = await Tezos.contract.at(standartToken);
+        const methods = await standartTokenContract.methods;
+        if (methods.update_operators === undefined) {
+            // FA1.2
+            console.log('FA1.2');
+            await approveTransfer(standartToken, to, amount, assetDecimals);
+            const operation = await standartTokenContract.methods.transfer(from, to, amount).send();
+            await operation.confirmation();
+            await approveTransfer(standartToken, to, 0, assetDecimals);
+        } else {
+            console.log('FA2');
+            await addOperator(standartToken, from, to, tokenId);
+            const operation = await standartTokenContract.methods
+                .transfer([
+                    {
+                        from_: from,
+                        txs: [
+                            {
+                                to_: to,
+                                token_id: tokenId,
+                                amount
+                            }
+                        ]
+                    }
+                ])
+                .send();
+            await operation.confirmation();
+            await removeOperator(standartToken, from, to, tokenId);
+        }
+        setDefaultProvider(adminAcc);
     };
 
     const openSaleFA12 = async (
@@ -188,6 +230,7 @@ const OpenSale = ({ isLoading }) => {
     const openSaleFA2 = async (
         wallet,
         tokensaleAddress,
+        baseAssetAddress,
         fa2Address,
         totalTokenAmount,
         totalBaseAssetAmount,
@@ -196,32 +239,45 @@ const OpenSale = ({ isLoading }) => {
         tokenId,
         tokenDecimals,
         assetDecimals,
-        tokenSymbol
+        tokenSymbol,
+        basedAssetAddress,
+        basedAssetName
     ) => {
-        Tezos.setWalletProvider(wallet);
+        await setDefaultProvider(adminAcc);
+        const standartTokenContract = await Tezos.contract.at(fa2Address);
         const tokensale = await Tezos.contract.at(tokensaleAddress);
-        await addOperator(fa2Address, await wallet.getPHK(), tokensaleAddress, tokenId);
-        const operation = await tokensale.methods
-            .openSale(
-                fa2Address,
-                toFloat(totalTokenAmount),
-                toFloat(totalBaseAssetAmount),
-                closeDate,
-                toFloat(tokenWeight),
-                toFloat(1) - toFloat(tokenWeight),
-                tokenId,
-                tokenDecimals,
-                assetDecimals,
-                tokenSymbol
-            )
-            .send();
+        const issuerAddress = await wallet.getPKH();
+        await addOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId);
+        const openSalePromise = tokensale.methods.openSale(
+            fa2Address,
+            toFloat(totalTokenAmount),
+            toFloat(totalBaseAssetAmount),
+            closeDate,
+            toFloat(tokenWeight),
+            toFloat(1) - toFloat(tokenWeight),
+            tokenId,
+            tokenDecimals,
+            assetDecimals,
+            tokenSymbol,
+            issuerAddress,
+            basedAssetAddress,
+            basedAssetName
+        );
+        if (baseAssetAddress === '') {
+            const operation = await openSalePromise.send({ amount: totalBaseAssetAmount });
 
-        await operation.confirmation();
-        if (operation.status !== 'applied') {
-            console.log('operation was not applied');
+            await operation.confirmation();
+            if (operation.status !== 'applied') {
+                console.log('Operation was not applied');
+            }
+        } else {
+            await Tezos.wallet
+                .batch()
+                .withContractCall(await openSalePromise)
+                .withContractCall(await transfer(wallet, baseAssetAddress, issuerAddress, tokensaleAddress, totalBaseAssetAmount, tokenId))
+                .send();
         }
-        await removeOperator(fa2Address, await wallet.getPHK(), tokensaleAddress, tokenId);
-        Tezos.setWalletProvider();
+        await removeOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId);
     };
 
     return (
