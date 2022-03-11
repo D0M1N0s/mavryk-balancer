@@ -112,7 +112,9 @@ const testOpenTwice = async () => {
     await removeOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId)
     
     var storage = await getFullStorage(tokensaleContract, fa2Address);
-    storageAssert(storage, issuerAddress, true, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+    storageAssert(storage, issuerAddress, true, totalTokenAmount, 
+        totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+        'Tezos', tokenDecimals, 'DMN', '');
     
     let thrown = false;
     try {
@@ -121,13 +123,17 @@ const testOpenTwice = async () => {
         thrown = true;
         assert(ex.message == "Tokensale is already open")
         storage = await getFullStorage(tokensaleContract, fa2Address);
-        storageAssert(storage, issuerAddress, true, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+        storageAssert(storage, issuerAddress, true, totalTokenAmount, 
+            totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+            'Tezos', tokenDecimals, 'DMN', '');
     }
     assert(thrown)
 
     await closeSale(tokensaleContract, fa2Address);
     storage = await getFullStorage(tokensaleContract, fa2Address);
-    storageAssert(storage, issuerAddress, false, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+    storageAssert(storage, issuerAddress, false, totalTokenAmount, 
+        totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+        'Tezos', tokenDecimals, 'DMN', '');
 }
 
 const testCloseClosed = async() => {
@@ -142,7 +148,9 @@ const testCloseClosed = async() => {
     await removeOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId)
     
     var storage = await getFullStorage(tokensaleContract, fa2Address);
-    storageAssert(storage, issuerAddress, true, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+    storageAssert(storage, issuerAddress, true, totalTokenAmount, 
+        totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+        'Tezos', tokenDecimals, 'DMN', '');
     await closeSale(tokensaleContract, fa2Address);
     storage = await getFullStorage(tokensaleContract, fa2Address);
 
@@ -153,10 +161,14 @@ const testCloseClosed = async() => {
         thrown = true; 
         assert(ex.message == "Tokensale is already closed")
         storage = await getFullStorage(tokensaleContract, fa2Address);
-        storageAssert(storage, issuerAddress, false, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+        storageAssert(storage, issuerAddress, false, totalTokenAmount, 
+            totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+            'Tezos', tokenDecimals, 'DMN', '');
     }
     assert(thrown)
-    storageAssert(storage, issuerAddress, false, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+    storageAssert(storage, issuerAddress, false, totalTokenAmount, 
+        totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+        'Tezos', tokenDecimals, 'DMN', '');    
 }
 
 const testInvalidToken = async() => {
@@ -189,7 +201,9 @@ const testTokenPurchase = async() => {
     await openSale(tokensaleContract, fa2Address, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenId, tokenDecimals, assetDecimals, issuerAddress);
     await removeOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId)
     var storage = await getFullStorage(tokensaleContract, fa2Address);
-    storageAssert(storage, issuerAddress, true, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+    storageAssert(storage, issuerAddress, true, totalTokenAmount, 
+        totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+        'Tezos', tokenDecimals, 'DMN', '');
     
     await buyToken(tokensaleContract, purchaseBaseAssetAmount, fa2Address, issuerAddress);
     var storage = await getFullStorage(tokensaleContract, fa2Address);
@@ -197,11 +211,15 @@ const testTokenPurchase = async() => {
     
     totalTokenAmount -= toNumber(correctDeltaTokens, tokenDecimals)
     totalBaseAssetAmount += purchaseBaseAssetAmount
-    storageAssert(storage, issuerAddress, true, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight)
+    storageAssert(storage, issuerAddress, true, totalTokenAmount, 
+        totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+        'Tezos', tokenDecimals, 'DMN', '');
     
     await closeSale(tokensaleContract, fa2Address);
     storage = await getFullStorage(tokensaleContract, fa2Address);
-    storageAssert(storage, issuerAddress, false, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+    storageAssert(storage, issuerAddress, false, totalTokenAmount, 
+        totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+        'Tezos', tokenDecimals, 'DMN', '');
 }
 
 const testPurchuaseNonExistingToken = async() => {
@@ -234,11 +252,16 @@ const testPurchuaseAfterClosure = async() => {
     await removeOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId)
     
     var storage = await getFullStorage(tokensaleContract, fa2Address);
-    storageAssert(storage, issuerAddress, true, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+    storageAssert(storage, issuerAddress, true, totalTokenAmount, 
+        totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+        'Tezos', tokenDecimals, 'DMN', '');
     
     await closeSale(tokensaleContract, fa2Address);
     storage = await getFullStorage(tokensaleContract, fa2Address);
-    storageAssert(storage, issuerAddress, false, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+    storageAssert(storage, issuerAddress, false, totalTokenAmount, 
+        totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+        'Tezos', tokenDecimals, 'DMN', '');
+    
     let thrown = false
     try {
         await buyToken(tokensaleContract, purchaseBaseAssetAmount, fa2Address, issuerAddress)
@@ -246,7 +269,9 @@ const testPurchuaseAfterClosure = async() => {
         thrown = true
         assert(ex.message == 'Tokensale is closed')
         storage = await getFullStorage(tokensaleContract, fa2Address);
-        storageAssert(storage, issuerAddress, false, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight)
+        storageAssert(storage, issuerAddress, false, totalTokenAmount, 
+            totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+            'Tezos', tokenDecimals, 'DMN', '');
     }
     assert(thrown)
 }
@@ -264,7 +289,9 @@ const testManyPurchasings = async() => {
     await openSale(tokensale, fa2Address, totalTokenAmount, totalBaseAssetAmount, closeDate, tokenWeight, tokenId, tokenDecimals, assetDecimals, issuerAddress);
     await removeOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId)
     var storage = await getFullStorage(tokensale, fa2Address);
-    storageAssert(storage, issuerAddress, true, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+    storageAssert(storage, issuerAddress, true, totalTokenAmount, 
+        totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+        'Tezos', tokenDecimals, 'DMN', '');
     
     for (let i = 0; i < purchaseBaseAsset.length; ++i) {
         let purchaseBaseAssetAmount = purchaseBaseAsset[i]
@@ -273,12 +300,16 @@ const testManyPurchasings = async() => {
         var storage = await getFullStorage(tokensale, fa2Address);
         totalTokenAmount -= toNumber(correctDeltaTokens, tokenDecimals)
         totalBaseAssetAmount += purchaseBaseAssetAmount
-        storageAssert(storage, issuerAddress, true, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight)
+        storageAssert(storage, issuerAddress, true, totalTokenAmount, 
+            totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+            'Tezos', tokenDecimals, 'DMN', '');
     }
 
     await closeSale(tokensale, fa2Address);
     storage = await getFullStorage(tokensale, fa2Address);
-    storageAssert(storage, issuerAddress, false, totalTokenAmount, totalBaseAssetAmount, fa2Address, closeDate, tokenWeight);
+    storageAssert(storage, issuerAddress, false, totalTokenAmount, 
+        totalBaseAssetAmount, fa2Address, closeDate, tokenWeight, 
+        'Tezos', tokenDecimals, 'DMN', '');
 }
 
 const testNotAdmin = async() => {

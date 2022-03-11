@@ -14,7 +14,7 @@ type token is record [
     id_fa2 : nat;
     token_dec : nat;
     based_asset_dec : nat;
-    token_symbol : string;
+    token_name : string;
     based_asset_address : string;
     based_asset_name : string;
 ]
@@ -44,7 +44,7 @@ function open_sale( var token_address : address;
                     var id_fa2 : nat;
                     var token_dec : nat;
                     var based_asset_dec : nat;
-                    var token_symbol : string;
+                    var token_name : string;
                     var token_issuer : address;
                     var based_asset_address : string;
                     var based_asset_name : string;
@@ -70,7 +70,7 @@ block {
         id_fa2 = id_fa2;
         token_dec = token_dec;
         based_asset_dec = based_asset_dec;
-        token_symbol = token_symbol;
+        token_name = token_name;
         based_asset_address = based_asset_address;
         based_asset_name = based_asset_name;
     ];
