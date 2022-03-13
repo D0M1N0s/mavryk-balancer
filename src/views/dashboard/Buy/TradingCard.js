@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import * as React from 'react';
 import { useEffect } from 'react';
+import fa12tokensale from '../../../json_files/fa12-latest.json';
+import fa2tokensale from '../../../json_files/fa2-latest.json';
 
 // material-ui
 import {
@@ -27,7 +29,9 @@ import store from 'store';
 import MainCard from 'ui-component/cards/MainCard';
 import Countdown from 'react-countdown';
 import { TezosToolkit } from '@taquito/taquito';
+import { InMemorySigner } from '@taquito/signer';
 
+import { buyTokenFA12, buyTokenFA2, TokenStandard } from './BuyTokenWrappers';
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
 
 const C_PRECISION = 10 ** 10;
@@ -146,9 +150,9 @@ const TradingCard = ({ isLoading }) => {
         );
         return exchangeRate;
     };
-
-    const handleClick = () => {
+    const handleClick = async () => {
         console.log('handleClick');
+        console.log(values);
         const calculated = GetTokenAmount(
             parseInt(values.based_asset_amount, 10),
             parseInt(values.token_amount, 10),
@@ -159,6 +163,18 @@ const TradingCard = ({ isLoading }) => {
         const final = FromFloatToNumber(calculated, 20);
         console.log('input:', values.based_asset_input);
         console.log('output:', final);
+        const standard = await TokenStandard(values.token_address);
+        console.log(standard);
+        const wallet = store.getState().wallet.wallet;
+        let operationHash = null;
+        if (standard === 'FA1.2') {
+            operationHash = await buyTokenFA12(wallet, fa12tokensale.address, values.based_asset_input, values.token_address);
+        } else if (standard === 'FA2') {
+            operationHash = await buyTokenFA2(wallet, fa2tokensale.address, values.based_asset_input, values.token_address);
+        } else {
+            // alert
+        }
+        console.log(operationHash);
     };
 
     const handleListItemClick = (event, currentToken) => {
@@ -187,31 +203,11 @@ const TradingCard = ({ isLoading }) => {
     };
 
     const handleChange = (prop) => (event) => {
+        console.log('changeeee', values);
+        console.log(event.target.value);
+        console.log([prop]);
         setValues({ ...values, [prop]: event.target.value });
     };
-
-    const buyTokenFA12 = async (wallet, tokensaleAddress, purchaseBaseAssetAmount, fa12Address) => {
-        Tezos.setWalletProvider(wallet);
-        const tokensale = await Tezos.contract.at(tokensaleAddress);
-        const op = await tokensale.methods.buyToken(ToFloat(purchaseBaseAssetAmount), fa12Address).send();
-        await op.confirmation();
-        if (op.status !== 'applied') {
-            console.log('operation was not applied');
-        }
-        Tezos.setWalletProvider();
-    };
-
-    const buyTokenFA2 = async (wallet, tokensaleAddress, purchaseBaseAssetAmount, fa2Address) => {
-        Tezos.setWalletProvider(wallet);
-        const tokensale = await Tezos.contract.at(tokensaleAddress);
-        const op = await tokensale.methods.buyToken(ToFloat(purchaseBaseAssetAmount), fa2Address).send();
-        await op.confirmation();
-        if (op.status !== 'applied') {
-            console.log('operation was not applied');
-        }
-        Tezos.setWalletProvider();
-    };
-
     return (
         <>
             {isLoading ? (
