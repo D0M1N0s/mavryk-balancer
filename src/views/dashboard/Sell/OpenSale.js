@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import * as React from 'react';
-import adminAcc from '../../../json_files/hangzhounet.json';
+
 import fa12tokensale from '../../../json_files/fa12-latest.json';
 import fa2tokensale from '../../../json_files/fa2-latest.json';
 
@@ -32,40 +32,12 @@ import {
 import SkeletonTradingCard from 'ui-component/cards/Skeleton/SkeletonCard';
 import store from 'store';
 import MainCard from 'ui-component/cards/MainCard';
-import { TezosToolkit } from '@taquito/taquito';
 
-import { InMemorySigner } from '@taquito/signer';
-
-import { openSaleFA12, openSaleFA2 } from './OpenSaleWrappers';
+import { openSaleFA12, openSaleFA2, TokenStandard } from './OpenSaleWrappers';
 
 // ===========================|| DASHBOARD DEFAULT - Open Sale ||=========================== //
 
 const OpenSale = ({ isLoading }) => {
-    const Tezos = new TezosToolkit('https://rpc.tzkt.io/hangzhou2net/');
-    const C_PRECISION = 10000000000;
-
-    function toFloat(value) {
-        return Math.floor(value * C_PRECISION);
-    }
-
-    async function setDefaultProvider(defaultProvider) {
-        await Tezos.setSignerProvider(
-            InMemorySigner.fromFundraiser(defaultProvider.email, defaultProvider.password, defaultProvider.mnemonic.join(' '))
-        );
-    }
-    async function TokenStandard(tokanAddress) {
-        setDefaultProvider(adminAcc);
-        const standartTokenContract = await Tezos.contract.at(tokanAddress);
-        const methods = await standartTokenContract.methods;
-        console.log(methods);
-        if (methods.update_operators !== undefined) {
-            return 'FA2';
-        }
-        if (methods.approve !== undefined) {
-            return 'FA1.2';
-        }
-        return 'undefined';
-    }
     async function bytesToString(bytes) {
         const result = [];
         for (let i = 0; i < bytes.length; i += 2) {
@@ -146,15 +118,18 @@ const OpenSale = ({ isLoading }) => {
         const wallet = store.getState().wallet.wallet;
         console.log('wallet info:', wallet, typeof wallet);
         console.log('store:', store.getState());
-        
         const tokenDecimals = await GetTokenDecimals(values.token_address, 0); // tokenId to get from user...
-        const assetDecimals = await GetTokenDecimals(values.based_asset_address, 0); // same about tokenId
+        let assetDecimals = 6;
+        if (values.based_asset_address !== '') {
+            assetDecimals = await GetTokenDecimals(values.based_asset_address, 0); // same about tokenId
+        }
         if (wallet === null) {
             // to show alert of unconnected wallet
             return;
         }
+        let opHash = null;
         if (standard === 'FA2') {
-            await openSaleFA2(
+            opHash = await openSaleFA2(
                 wallet,
                 fa2tokensale.address,
                 values.token_address,
@@ -170,7 +145,7 @@ const OpenSale = ({ isLoading }) => {
                 values.based_asset_name
             );
         } else if (standard === 'FA1.2') {
-            await openSaleFA12(
+            opHash = await openSaleFA12(
                 wallet,
                 fa12tokensale.address,
                 values.token_address,
@@ -187,6 +162,7 @@ const OpenSale = ({ isLoading }) => {
         } else {
             // need to create alert about undefined token standard
         }
+        console.log(opHash);
     };
 
     const setTime = (time) => {
