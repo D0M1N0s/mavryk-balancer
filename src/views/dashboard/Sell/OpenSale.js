@@ -38,7 +38,7 @@ import { openSaleFA12, openSaleFA2, TokenStandard } from './OpenSaleWrappers';
 // ===========================|| DASHBOARD DEFAULT - Open Sale ||=========================== //
 
 const OpenSale = ({ isLoading }) => {
-    async function bytesToString(bytes) {
+    function bytesToString(bytes) {
         const result = [];
         for (let i = 0; i < bytes.length; i += 2) {
             result.push(String.fromCharCode(parseInt(bytes.substr(i, 2), 16)));
@@ -51,8 +51,12 @@ const OpenSale = ({ isLoading }) => {
         token.responseType = 'json';
         token.open('GET', storageUrl);
         token.send();
-        let decimals = 0;
-        token.onreadystatechange = async () => {
+        let res = 0;
+        const decimalsPr = new Promise((val) => {
+            res = val;
+            return res;
+        });
+        token.onreadystatechange = () => {
             if (token.response !== null) {
                 const tokenList = token.response;
                 console.log('response:', tokenList);
@@ -62,14 +66,16 @@ const OpenSale = ({ isLoading }) => {
                         if (tokenList[i].value.token_info !== undefined) {
                             bytes = tokenList[i].value.token_info.decimals;
                         }
+                        console.log(tokenList[i].value.token_info);
+                        console.log(bytes);
                     }
                 }
                 if (bytes != null) {
-                    decimals = await bytesToString(bytes);
+                    res(parseInt(bytesToString(bytes), 10));
                 }
             }
         };
-        return parseInt(decimals, 10);
+        return decimalsPr;
     }
     const [open, setOpen] = React.useState(false);
     const [values, setValues] = React.useState({
@@ -114,10 +120,7 @@ const OpenSale = ({ isLoading }) => {
         console.log(map);
         console.log(values);
         const standard = await TokenStandard(values.token_address);
-        console.log('store:', store.getState());
         const wallet = store.getState().wallet.wallet;
-        console.log('wallet info:', wallet, typeof wallet);
-        console.log('store:', store.getState());
         const tokenDecimals = await GetTokenDecimals(values.token_address, 0); // tokenId to get from user...
         let assetDecimals = 6;
         if (values.based_asset_address !== '') {
@@ -127,7 +130,11 @@ const OpenSale = ({ isLoading }) => {
             // to show alert of unconnected wallet
             return;
         }
+        values.token_weight = store.getState().sale.input_weight;
+        values.token_id = store.getState().sale.id_fa2;
         let opHash = null;
+        console.log(store.getState().sale);
+        console.log(standard);
         if (standard === 'FA2') {
             opHash = await openSaleFA2(
                 wallet,
@@ -136,7 +143,7 @@ const OpenSale = ({ isLoading }) => {
                 values.token_amount,
                 values.based_asset_amount,
                 values.close_date,
-                values.token_weight,
+                values.token_weight / 100,
                 values.token_id,
                 tokenDecimals,
                 assetDecimals,
@@ -152,7 +159,7 @@ const OpenSale = ({ isLoading }) => {
                 values.token_amount,
                 values.based_asset_amount,
                 values.close_date,
-                values.token_weight,
+                values.token_weight / 100,
                 tokenDecimals,
                 assetDecimals,
                 values.token_name,
