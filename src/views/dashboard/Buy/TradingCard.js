@@ -29,13 +29,11 @@ import store from 'store';
 import MainCard from 'ui-component/cards/MainCard';
 import Countdown from 'react-countdown';
 import { TezosToolkit } from '@taquito/taquito';
-import { InMemorySigner } from '@taquito/signer';
 
 import { buyTokenFA12, buyTokenFA2, TokenStandard } from './BuyTokenWrappers';
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
 
 const C_PRECISION = 10 ** 10;
-const Tezos = new TezosToolkit('https://rpc.tzkt.io/hangzhou2net/');
 
 function ToFloat(value) {
     return Math.floor(value * C_PRECISION);
@@ -79,6 +77,9 @@ function PowFloats(a, power) {
 // Returns the recieved by user amount of tokens multiplyed by C_PRECISION
 // To get "normal" delta need to use FromFloatToNumber with necessary decimals of issuer's token
 function GetTokenAmount(reserveTokenI, reserveTokenO, deltaTokenI, weightI, weightO) {
+    if (deltaTokenI === 0) {
+        return 0;
+    }
     const fraction = Div(reserveTokenI, reserveTokenI + deltaTokenI);
     const power = Div(weightI, weightO);
     const fractionRoot = PowFloats(fraction, power);
@@ -134,10 +135,6 @@ const TradingCard = ({ isLoading }) => {
     };
 
     const calculateExchangeRate = () => {
-        console.log(values.based_asset_amount);
-        console.log(values.token_amount);
-        console.log(values.based_asset_weight);
-        console.log(values.token_weight);
         const exchangeRate = FromFloatToNumber(
             GetTokenAmount(
                 parseInt(values.based_asset_amount, 10),
@@ -146,7 +143,7 @@ const TradingCard = ({ isLoading }) => {
                 parseInt(values.based_asset_weight, 10),
                 parseInt(values.token_weight, 10)
             ),
-            20
+            parseInt(values.token_dec, 10)
         );
         return exchangeRate;
     };
@@ -175,6 +172,7 @@ const TradingCard = ({ isLoading }) => {
             // alert
         }
         console.log(operationHash);
+        // also need to fetch from contract new storage state
     };
 
     const handleListItemClick = (event, currentToken) => {
@@ -191,7 +189,9 @@ const TradingCard = ({ isLoading }) => {
             based_asset_weight: token[0].based_asset_weight,
             based_asset_address: token[0].based_asset_address,
             based_asset_name: token[0].based_asset_name,
-            close_date: token[0].close_date
+            close_date: token[0].close_date,
+            token_dec: token[0].token_dec,
+            based_asset_dec: token[0].based_asset_dec
         });
         store.dispatch({
             type: 'setToken',
@@ -203,10 +203,17 @@ const TradingCard = ({ isLoading }) => {
     };
 
     const handleChange = (prop) => (event) => {
-        console.log('changeeee', values);
-        console.log(event.target.value);
-        console.log([prop]);
-        setValues({ ...values, [prop]: event.target.value });
+        const calculated = FromFloatToNumber(
+            GetTokenAmount(
+                parseInt(values.based_asset_amount, 10),
+                parseInt(values.token_amount, 10),
+                ToFloat(event.target.value),
+                parseInt(values.based_asset_weight, 10),
+                parseInt(values.token_weight, 10)
+            ),
+            parseInt(values.token_dec, 10)
+        );
+        setValues({ ...values, [prop]: event.target.value, token_input: calculated });
     };
     return (
         <>
