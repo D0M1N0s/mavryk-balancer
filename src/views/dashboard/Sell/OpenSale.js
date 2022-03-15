@@ -25,7 +25,9 @@ import {
     List,
     ListItemButton,
     ListItem,
-    ListItemText
+    ListItemText,
+    Popover,
+    Popper
 } from '@mui/material';
 
 // project imports
@@ -78,6 +80,9 @@ const OpenSale = ({ isLoading }) => {
         return decimalsPr;
     }
     const [open, setOpen] = React.useState(false);
+    const [anchor, setAnchor] = React.useState(null);
+    const [warningMessage, setWarningMessage] = React.useState('');
+    const [popperVisibility, setPopperVisibility] = React.useState(false);
     const [values, setValues] = React.useState({
         token_address: '',
         token_name: '',
@@ -86,7 +91,8 @@ const OpenSale = ({ isLoading }) => {
         based_asset_name: 'XTZ',
         based_asset_amount: 0,
         close_date: null,
-        token_weight: null
+        token_weight: null,
+        token_id: -1
     });
 
     const handleClickOpen = () => {
@@ -114,61 +120,108 @@ const OpenSale = ({ isLoading }) => {
         });
         handleClose();
     };
-
-    const openSale = async () => {
+    const popperChangeState = (currentTarget) => {
+        setAnchor(currentTarget);
+    };
+    const popperChangeVisability = (warningText, visibility) => {
+        setWarningMessage(warningText);
+        setPopperVisibility(visibility);
+    };
+    const InvalidOpensaleParams = (standard) => {
+        if (values.close_date === undefined || values.close_date === null) {
+            return true;
+        }
+        if (values.token_weight === null || values.token_name === null) {
+            return true;
+        }
+        if (values.token_amount === 0 || values.based_asset_amount === 0) {
+            return true;
+        }
+        if (standard === 'FA2' && values.token_id < 0) {
+            return true;
+        }
+        return false;
+    };
+    const openSale = async (event) => {
+        popperChangeState(event.currentTarget);
+        popperChangeVisability('', false);
         const map = store.getState().tokens.map((x) => x.address);
-        console.log(map);
+        console.log('store:', store.getState().sale);
         console.log(values);
-        const standard = await TokenStandard(values.token_address);
         const wallet = store.getState().wallet.wallet;
+        console.log('wallet', wallet);
+        if (wallet === null) {
+            popperChangeVisability('Please, connect your wallet', true);
+            return;
+        }
+        let standard = '';
+        try {
+            standard = await TokenStandard(values.token_address);
+        } catch (exp) {
+            popperChangeVisability(exp.message, true);
+            return;
+        }
         const tokenDecimals = await GetTokenDecimals(values.token_address, 0); // tokenId to get from user...
         let assetDecimals = 6;
         if (values.based_asset_address !== '') {
             assetDecimals = await GetTokenDecimals(values.based_asset_address, 0); // same about tokenId
         }
-        if (wallet === null) {
-            // to show alert of unconnected wallet
-            return;
-        }
         values.token_weight = store.getState().sale.input_weight;
         values.token_id = store.getState().sale.id_fa2;
         let opHash = null;
-        console.log(store.getState().sale);
         console.log(standard);
-        if (standard === 'FA2') {
-            opHash = await openSaleFA2(
-                wallet,
-                fa2tokensale.address,
-                values.token_address,
-                values.token_amount,
-                values.based_asset_amount,
-                values.close_date,
-                values.token_weight / 100,
-                values.token_id,
-                tokenDecimals,
-                assetDecimals,
-                values.token_name,
-                values.based_asset_address,
-                values.based_asset_name
-            );
-        } else if (standard === 'FA1.2') {
-            opHash = await openSaleFA12(
-                wallet,
-                fa12tokensale.address,
-                values.token_address,
-                values.token_amount,
-                values.based_asset_amount,
-                values.close_date,
-                values.token_weight / 100,
-                tokenDecimals,
-                assetDecimals,
-                values.token_name,
-                values.based_asset_address,
-                values.based_asset_name
-            );
-        } else {
-            // need to create alert about undefined token standard
+        if (InvalidOpensaleParams(standard)) {
+            popperChangeVisability('Invalid params for tokensale', true);
+            return;
         }
+        if (standard === 'FA2') {
+            try {
+                // to show loading window here
+                opHash = await openSaleFA2(
+                    wallet,
+                    fa2tokensale.address,
+                    values.token_address,
+                    values.token_amount,
+                    values.based_asset_amount,
+                    values.close_date,
+                    values.token_weight / 100,
+                    values.token_id,
+                    tokenDecimals,
+                    assetDecimals,
+                    values.token_name,
+                    values.based_asset_address,
+                    values.based_asset_name
+                );
+            } catch (exp) {
+                popperChangeVisability(exp.message, true);
+                return;
+            }
+        } else if (standard === 'FA1.2') {
+            try {
+                // to show loading window here
+                opHash = await openSaleFA12(
+                    wallet,
+                    fa12tokensale.address,
+                    values.token_address,
+                    values.token_amount,
+                    values.based_asset_amount,
+                    values.close_date,
+                    values.token_weight / 100,
+                    tokenDecimals,
+                    assetDecimals,
+                    values.token_name,
+                    values.based_asset_address,
+                    values.based_asset_name
+                );
+            } catch (exp) {
+                popperChangeVisability(exp.message, true);
+                return;
+            }
+        } else {
+            popperChangeVisability('Unexpected token standard: tokensale supports only FA1.2 or FA2 standards', true);
+            return;
+        }
+        // to show window with hash here
         console.log(opHash);
     };
 
@@ -342,6 +395,9 @@ const OpenSale = ({ isLoading }) => {
                             </Grid>
                         </Box>
                     </LocalizationProvider>
+                    <Popper open={popperVisibility} anchorEl={anchor}>
+                        <Box sx={{ border: 1, p: 1, bgcolor: 'background.paper' }}>{warningMessage}</Box>
+                    </Popper>
                 </MainCard>
             )}
         </>

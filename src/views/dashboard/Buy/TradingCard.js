@@ -18,7 +18,8 @@ import {
     ListItemButton,
     Chip,
     Dialog,
-    Divider
+    Divider,
+    Popper
 } from '@mui/material';
 
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
@@ -95,6 +96,9 @@ function FromFloatToNumber(value, decimals) {
 
 const TradingCard = ({ isLoading }) => {
     const [open, setOpen] = React.useState(false);
+    const [anchor, setAnchor] = React.useState(null);
+    const [warningMessage, setWarningMessage] = React.useState('');
+    const [popperVisibility, setPopperVisibility] = React.useState(false);
     const [values, setValues] = React.useState({
         token_input: 0,
         token_amount: 0,
@@ -133,7 +137,13 @@ const TradingCard = ({ isLoading }) => {
     const handleClose = () => {
         setOpen(false);
     };
-
+    const popperChangeState = (currentTarget) => {
+        setAnchor(currentTarget);
+    };
+    const popperChangeVisability = (warningText, visibility) => {
+        setWarningMessage(warningText);
+        setPopperVisibility(visibility);
+    };
     const calculateExchangeRate = () => {
         const exchangeRate = FromFloatToNumber(
             GetTokenAmount(
@@ -147,9 +157,15 @@ const TradingCard = ({ isLoading }) => {
         );
         return exchangeRate;
     };
-    const handleClick = async () => {
+    const handleClick = async (event) => {
+        popperChangeState(event.currentTarget);
+        popperChangeVisability('', false);
         console.log('handleClick');
         console.log(values);
+        if (parseInt(values.token_amount, 10) === 0) {
+            popperChangeVisability('Purchuasing amount should be positive', true);
+            return;
+        }
         const calculated = GetTokenAmount(
             parseInt(values.based_asset_amount, 10),
             parseInt(values.token_amount, 10),
@@ -160,17 +176,35 @@ const TradingCard = ({ isLoading }) => {
         const final = FromFloatToNumber(calculated, 20);
         console.log('input:', values.based_asset_input);
         console.log('output:', final);
+        const wallet = store.getState().wallet.wallet;
+        if (wallet === null) {
+            popperChangeVisability('Please connect your wallet', true);
+            return;
+        }
         const standard = await TokenStandard(values.token_address);
         console.log(standard);
-        const wallet = store.getState().wallet.wallet;
         let operationHash = null;
         if (standard === 'FA1.2') {
-            operationHash = await buyTokenFA12(wallet, fa12tokensale.address, values.based_asset_input, values.token_address);
+            try {
+                // to show loading window here
+                operationHash = await buyTokenFA12(wallet, fa12tokensale.address, values.based_asset_input, values.token_address);
+            } catch (exp) {
+                popperChangeVisability(exp.message, true);
+                return;
+            }
         } else if (standard === 'FA2') {
-            operationHash = await buyTokenFA2(wallet, fa2tokensale.address, values.based_asset_input, values.token_address);
+            try {
+                // to show loading window here
+                operationHash = await buyTokenFA2(wallet, fa2tokensale.address, values.based_asset_input, values.token_address);
+            } catch (exp) {
+                popperChangeVisability(exp.message, true);
+                return;
+            }
         } else {
-            // alert
+            popperChangeVisability('Unexpected token standard: tokensale supports only FA1.2 or FA2 standards', true);
+            return;
         }
+        // to show window with hash operation
         console.log(operationHash);
         // also need to fetch from contract new storage state
     };
@@ -203,6 +237,12 @@ const TradingCard = ({ isLoading }) => {
     };
 
     const handleChange = (prop) => (event) => {
+        popperChangeState(event.currentTarget);
+        popperChangeVisability('', false);
+        if (parseInt(event.target.value, 10) <= 0) {
+            popperChangeVisability('Purchuasing amount should be positive', true);
+            return;
+        }
         const calculated = FromFloatToNumber(
             GetTokenAmount(
                 parseInt(values.based_asset_amount, 10),
@@ -357,6 +397,9 @@ const TradingCard = ({ isLoading }) => {
                             </Button>
                         </Grid>
                     </Grid>
+                    <Popper open={popperVisibility} anchorEl={anchor}>
+                        <Box sx={{ border: 1, p: 1, bgcolor: 'background.paper' }}>{warningMessage}</Box>
+                    </Popper>
                 </MainCard>
             )}
         </>

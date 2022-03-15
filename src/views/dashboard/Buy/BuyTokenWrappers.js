@@ -44,7 +44,7 @@ const buyTokenFA2 = async (wallet, tokensaleAddress, purchaseBaseAssetAmount, fa
         .send({ amount: purchaseBaseAssetAmount });
     await op.confirmation();
     if (op.status !== 'applied') {
-        console.log('operation was not applied');
+        throw Error('operation was not applied');
     }
     return op.hash;
 };
@@ -65,7 +65,7 @@ const buyTokenFA12 = async (wallet, tokensaleAddress, purchaseBaseAssetAmount, f
         .send({ amount: purchaseBaseAssetAmount });
     await op.confirmation();
     if (op.status !== 'applied') {
-        console.log('operation was not applied');
+        throw Error('operation was not applied');
     }
     return op.hash;
 };

@@ -109,34 +109,45 @@ const openSaleFA2 = async (
     if (basedAssetAddress === '') {
         const addOp = await addOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId).send();
         await addOp.confirmation();
-        const operation = await openSaleTransaction.send({ amount: totalBaseAssetAmount });
-        await operation.confirmation();
-        if (operation.status !== 'applied') {
-            console.log('Operation was not applied');
+        let operation;
+        try {
+            operation = await openSaleTransaction.send({ amount: totalBaseAssetAmount });
+            await operation.confirmation();
+            if (operation.status !== 'applied') {
+                throw Error('Operation was not applied');
+            }
+        } catch (exp) {
+            await removeOperator(fa2Address, issuerAddress, tokensaleAddress, tokenId);
+            throw exp;
         }
         operationHash = operation.hash;
     } else {
-        const basedAssetContract = await Tezos.contract.at(basedAssetAddress);
-        const standard = await TokenStandard(basedAssetAddress);
-        let transferBasedAsset = null;
-        if (standard === 'FA2') {
-            transferBasedAsset = transferFA2(basedAssetContract, issuerAddress, tokensaleAddress, totalBaseAssetAmount, 0);
-        } else if (standard === 'FA1.2') {
-            transferBasedAsset = transferFA12(basedAssetContract, issuerAddress, tokensaleAddress, totalBaseAssetAmount);
-        } else {
-            // to show error
+        try {
+            const basedAssetContract = await Tezos.contract.at(basedAssetAddress);
+            const standard = await TokenStandard(basedAssetAddress);
+            let transferBasedAsset = null;
+            if (standard === 'FA2') {
+                transferBasedAsset = transferFA2(basedAssetContract, issuerAddress, tokensaleAddress, totalBaseAssetAmount, 0);
+            } else if (standard === 'FA1.2') {
+                transferBasedAsset = transferFA12(basedAssetContract, issuerAddress, tokensaleAddress, totalBaseAssetAmount);
+            } else {
+                throw Error('Unexpected based asset standard: only FA1.2 and FA2 are supported');
+            }
+            console.log(transferBasedAsset);
+            const batchOperation = await Tezos.contract
+                .batch()
+                .withContractCall(addOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId))
+                .withContractCall(openSaleTransaction)
+                .withContractCall(transferBasedAsset)
+                .send();
+            console.log(batchOperation);
+            await batchOperation.confirmation();
+            console.log(batchOperation.hash);
+            operationHash = batchOperation.hash;
+        } catch (exp) {
+            await removeOperator(fa2Address, issuerAddress, tokensaleAddress, tokenId);
+            throw exp;
         }
-        console.log(transferBasedAsset);
-        const batchOperation = await Tezos.contract
-            .batch()
-            .withContractCall(addOperator(standartTokenContract, issuerAddress, tokensaleAddress, tokenId))
-            .withContractCall(openSaleTransaction)
-            .withContractCall(transferBasedAsset)
-            .send();
-        console.log(batchOperation);
-        await batchOperation.confirmation();
-        console.log(batchOperation.hash);
-        operationHash = batchOperation.hash;
     }
     await removeOperator(fa2Address, issuerAddress, tokensaleAddress, tokenId);
     return operationHash;
