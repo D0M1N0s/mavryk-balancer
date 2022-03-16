@@ -5,7 +5,7 @@ import { Grid, Box } from '@mui/material';
 
 // project imports
 import TradingCard from './OpenSale';
-import WalletCard from './WalletCard';
+import WalletCard from '../Wallet';
 import Statistics from './Statistics';
 import StandartPicker from './StandartPicker';
 

@@ -60,7 +60,7 @@ export default function AlertDialogSlide() {
                             </Typography>
                         </Grid>
                         <Grid item>
-                            <Typography noWrap variant="h4" align="end" sx={{ width: '10ch' }}>
+                            <Typography noWrap variant="h4" align="start" sx={{ width: '10ch' }}>
                                 {values.address}
                             </Typography>
                         </Grid>

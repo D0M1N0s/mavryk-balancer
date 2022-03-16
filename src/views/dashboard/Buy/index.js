@@ -5,7 +5,7 @@ import { Grid, Box } from '@mui/material';
 
 // project imports
 import TradingCard from './TradingCard';
-import WalletCard from './WalletCard';
+import WalletCard from '../Wallet';
 import TradingInformation from './TradingInformation';
 import TradingHistory from './TradingHistory';
 
@@ -31,7 +31,7 @@ const Dashboard = () => {
                 <Grid item lg={5} xs={5}>
                     <TradingCard isLoading={isLoading} />
                 </Grid>
-                <Grid item lg={3} xs={3}>
+                <Grid item lg={3.5} xs={3}>
                     <TradingInformation />
                 </Grid>
             </Grid>
