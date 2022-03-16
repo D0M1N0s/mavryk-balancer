@@ -247,8 +247,8 @@ const TradingCard = ({ isLoading }) => {
     const calculateExchangeRate = () => {
         const exchangeRate = FromFloatToNumber(
             GetTokenAmount(
-                parseInt(values.based_asset_amount, 10),
-                parseInt(values.token_amount, 10),
+                parseFloat(values.based_asset_amount, 10),
+                parseFloat(values.token_amount, 10),
                 ToFloat(1),
                 parseInt(values.based_asset_weight, 10),
                 parseInt(values.token_weight, 10)
@@ -267,13 +267,13 @@ const TradingCard = ({ isLoading }) => {
         popperChangeVisability('', false);
         console.log('handleClick');
         console.log(values);
-        if (parseInt(values.token_amount, 10) === 0) {
+        if (parseFloat(values.token_amount, 10) === 0) {
             popperChangeVisability('Purchuasing amount should be positive', true);
             return;
         }
         const calculated = GetTokenAmount(
-            parseInt(values.based_asset_amount, 10),
-            parseInt(values.token_amount, 10),
+            parseFloat(values.based_asset_amount, 10),
+            parseFloat(values.token_amount, 10),
             ToFloat(values.based_asset_input),
             parseInt(values.based_asset_weight, 10),
             parseInt(values.token_weight, 10)
@@ -350,14 +350,14 @@ const TradingCard = ({ isLoading }) => {
             const exchangeRate = calculateExchangeRate();
             popperChangeState(event.currentTarget);
             popperChangeVisability('', false);
-            if (parseInt(event.target.value, 10) <= 0) {
+            if (parseFloat(event.target.value, 10) <= 0) {
                 popperChangeVisability('Purchasing amount should be positive', true);
                 return;
             }
             const calculated = FromFloatToNumber(
                 GetTokenAmount(
-                    parseInt(values.based_asset_amount, 10),
-                    parseInt(values.token_amount, 10),
+                    parseFloat(values.based_asset_amount, 10),
+                    parseFloat(values.token_amount, 10),
                     ToFloat(event.target.value),
                     parseInt(values.based_asset_weight, 10),
                     parseInt(values.token_weight, 10)
