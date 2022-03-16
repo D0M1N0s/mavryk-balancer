@@ -301,7 +301,7 @@ const OpenSale = ({ isLoading }) => {
                                                             variant="outlined"
                                                             sx={{ width: '100%' }}
                                                         />
-                                                        <Dialog onClose={handleClose} open={open}>
+                                                        {/* <Dialog onClose={handleClose} open={open}>
                                                             <MainCard>
                                                                 <Box sx={{ p: 1.5, width: '100%' }}>
                                                                     <Grid
@@ -340,7 +340,7 @@ const OpenSale = ({ isLoading }) => {
                                                                     </Grid>
                                                                 </Box>
                                                             </MainCard>
-                                                        </Dialog>
+                                                        </Dialog> */}
                                                     </InputAdornment>
                                                 }
                                                 inputProps={{

@@ -67,7 +67,7 @@ const WalletCard = ({ isLoading }) => {
 									<Divider dark />
 								</Grid>
 								<Grid item>
-										<Typography variant="h4"  gutterBottom align="start" sx={0}>
+										<Typography variant="h4"  gutterBottom noWrap align="start" sx={{ width: '35ch' }}>
 											Token address : {values.token_address}
 										</Typography>
                                 </Grid>
@@ -75,7 +75,7 @@ const WalletCard = ({ isLoading }) => {
 									<Divider dark />
 								</Grid>
 								<Grid item>
-										<Typography variant="h4"  gutterBottom align="start" sx={0}>
+										<Typography variant="h4"  gutterBottom noWrap align="start" sx={{ width: '35ch' }}>
 											Token tezos balance : {values.based_asset_amount}
 										</Typography>
                                 </Grid>
@@ -83,7 +83,7 @@ const WalletCard = ({ isLoading }) => {
 									<Divider dark />
 								</Grid>
 								<Grid item>
-										<Typography variant="h4"  gutterBottom align="start" sx={0}>
+										<Typography variant="h4"  gutterBottom noWrap align="start" sx={{ width: '35ch' }}>
 											Total token amount : {values.token_amount}
 										</Typography>
                                 </Grid>
@@ -91,7 +91,7 @@ const WalletCard = ({ isLoading }) => {
 									<Divider dark />
 								</Grid>
 								<Grid item>
-										<Typography variant="h4"  gutterBottom align="start" sx={0}>
+										<Typography variant="h4"  gutterBottom noWrap align="start" sx={{ width: '35ch' }}>
 											Token close date : {values.close_date}
 										</Typography>
                                 </Grid>
