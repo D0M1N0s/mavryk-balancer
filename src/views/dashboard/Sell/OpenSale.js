@@ -9,6 +9,9 @@ import DateTimePicker from '@mui/lab/DateTimePicker';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
+import DialogContent from '@mui/material/DialogContent';
+import LinearProgress from '@mui/material/LinearProgress';
+import { styled } from '@mui/material/styles';
 
 import {
     Box,
@@ -26,8 +29,8 @@ import {
     ListItemButton,
     ListItem,
     ListItemText,
-    Popover,
-    Popper
+    Popper,
+    Divider
 } from '@mui/material';
 
 // project imports
@@ -80,9 +83,16 @@ const OpenSale = ({ isLoading }) => {
         return decimalsPr;
     }
     const [open, setOpen] = React.useState(false);
+    // consts for dialog window with loading bar
+    const [disabled, setDisabled] = React.useState(false);
+    const [openDialog, setOpenDialog] = React.useState(false);
+    const [progressDisabled, setProgressDisabled] = React.useState(false);
+    const [operationMessage, setOperationMessage] = React.useState('');
+    // consts for popper with errors
     const [anchor, setAnchor] = React.useState(null);
     const [warningMessage, setWarningMessage] = React.useState('');
     const [popperVisibility, setPopperVisibility] = React.useState(false);
+    // const for token info
     const [values, setValues] = React.useState({
         token_address: '',
         token_name: '',
@@ -142,7 +152,13 @@ const OpenSale = ({ isLoading }) => {
         }
         return false;
     };
+    const closeDialog = () => {
+        setOpenDialog(false);
+    };
     const openSale = async (event) => {
+        setProgressDisabled(true);
+        setOperationMessage('');
+        setDisabled(true);
         popperChangeState(event.currentTarget);
         popperChangeVisability('', false);
         const map = store.getState().tokens.map((x) => x.address);
@@ -176,7 +192,7 @@ const OpenSale = ({ isLoading }) => {
         }
         if (standard === 'FA2') {
             try {
-                // to show loading window here
+                setOpenDialog(true);
                 opHash = await openSaleFA2(
                     wallet,
                     fa2tokensale.address,
@@ -193,12 +209,14 @@ const OpenSale = ({ isLoading }) => {
                     values.based_asset_name
                 );
             } catch (exp) {
-                popperChangeVisability(exp.message, true);
+                setOperationMessage(exp.message);
+                setDisabled(false);
+                setProgressDisabled(true);
                 return;
             }
         } else if (standard === 'FA1.2') {
             try {
-                // to show loading window here
+                setOpenDialog(true);
                 opHash = await openSaleFA12(
                     wallet,
                     fa12tokensale.address,
@@ -214,15 +232,19 @@ const OpenSale = ({ isLoading }) => {
                     values.based_asset_name
                 );
             } catch (exp) {
-                popperChangeVisability(exp.message, true);
+                setOperationMessage(exp.message);
+                setDisabled(false);
+                setProgressDisabled(true);
                 return;
             }
         } else {
             popperChangeVisability('Unexpected token standard: tokensale supports only FA1.2 or FA2 standards', true);
             return;
         }
-        // to show window with hash here
         console.log(opHash);
+        setOperationMessage(`Hash of the operation: ${opHash}`);
+        setDisabled(false);
+        setProgressDisabled(true);
     };
 
     const setTime = (time) => {
@@ -398,6 +420,39 @@ const OpenSale = ({ isLoading }) => {
                     <Popper open={popperVisibility} anchorEl={anchor}>
                         <Box sx={{ border: 1, p: 1, bgcolor: 'background.paper' }}>{warningMessage}</Box>
                     </Popper>
+                    <Dialog open={openDialog} aria-describedby="alert-dialog-slide-description">
+                        <DialogContent>
+                            <Box sx={{ p: 1.5 }}>
+                                <Grid container direction="row" spacing={1}>
+                                    <Grid container direction="column" justifyContent="start" alignItems="stretch" spacing={0}>
+                                        <Grid item>
+                                            <Typography variant="h4" align="center" sx={0}>
+                                                Please, wait for the operation to be applied.
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item>
+                                            <FormControl sx={{ m: 2, width: '42ch' }} variant="outlined">
+                                                <LinearProgress />
+                                            </FormControl>
+                                        </Grid>
+                                        <Grid item>
+                                            <Typography variant="h4" align="center" sx={0}>
+                                                {operationMessage}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item>
+                                            <FormControl sx={{ m: 2, width: '42ch' }} variant="outlined">
+                                                <Button disableElevation onClick={closeDialog} disabled={disabled}>
+                                                    <Typography variant="h4">OK</Typography>
+                                                </Button>
+                                            </FormControl>
+                                        </Grid>
+                                    </Grid>
+                                    <Divider />
+                                </Grid>
+                            </Box>
+                        </DialogContent>
+                    </Dialog>
                 </MainCard>
             )}
         </>

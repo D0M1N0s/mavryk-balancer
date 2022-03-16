@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import * as React from 'react';
-import { useEffect } from 'react';
+
 import fa12tokensale from '../../../json_files/fa12-latest.json';
 import fa2tokensale from '../../../json_files/fa2-latest.json';
 
@@ -19,17 +19,19 @@ import {
     Chip,
     Dialog,
     Divider,
-    Popper
+    Popper,
+    FormControl
 } from '@mui/material';
 
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
+import DialogContent from '@mui/material/DialogContent';
+import LinearProgress from '@mui/material/LinearProgress';
 
 // project imports
 import SkeletonTradingCard from 'ui-component/cards/Skeleton/SkeletonCard';
 import store from 'store';
 import MainCard from 'ui-component/cards/MainCard';
 import Countdown from 'react-countdown';
-import { TezosToolkit } from '@taquito/taquito';
 
 import { buyTokenFA12, buyTokenFA2, TokenStandard } from './BuyTokenWrappers';
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
@@ -96,9 +98,16 @@ function FromFloatToNumber(value, decimals) {
 
 const TradingCard = ({ isLoading }) => {
     const [open, setOpen] = React.useState(false);
+    // consts for dialog window with loading bar
+    const [disabled, setDisabled] = React.useState(false);
+    const [openDialog, setOpenDialog] = React.useState(false);
+    const [operationMessage, setOperationMessage] = React.useState('');
+    const [progressDisabled, setProgressDisabled] = React.useState(false);
+    // consts for popper with errors
     const [anchor, setAnchor] = React.useState(null);
     const [warningMessage, setWarningMessage] = React.useState('');
     const [popperVisibility, setPopperVisibility] = React.useState(false);
+    // consts for token info
     const [values, setValues] = React.useState({
         token_input: 0,
         token_amount: 0,
@@ -157,7 +166,12 @@ const TradingCard = ({ isLoading }) => {
         );
         return exchangeRate;
     };
+    const closeDialog = () => {
+        setOpenDialog(false);
+    };
     const handleClick = async (event) => {
+        setOperationMessage('');
+        setDisabled(true);
         popperChangeState(event.currentTarget);
         popperChangeVisability('', false);
         console.log('handleClick');
@@ -186,7 +200,7 @@ const TradingCard = ({ isLoading }) => {
         let operationHash = null;
         if (standard === 'FA1.2') {
             try {
-                // to show loading window here
+                setOpenDialog(true);
                 operationHash = await buyTokenFA12(wallet, fa12tokensale.address, values.based_asset_input, values.token_address);
             } catch (exp) {
                 popperChangeVisability(exp.message, true);
@@ -194,19 +208,21 @@ const TradingCard = ({ isLoading }) => {
             }
         } else if (standard === 'FA2') {
             try {
-                // to show loading window here
+                setOpenDialog(true);
                 operationHash = await buyTokenFA2(wallet, fa2tokensale.address, values.based_asset_input, values.token_address);
             } catch (exp) {
-                popperChangeVisability(exp.message, true);
+                setOperationMessage(exp.message);
+                setDisabled(false);
                 return;
             }
         } else {
+            setDisabled(false);
             popperChangeVisability('Unexpected token standard: tokensale supports only FA1.2 or FA2 standards', true);
             return;
         }
-        // to show window with hash operation
         console.log(operationHash);
-        // also need to fetch from contract new storage state
+        setOperationMessage(`Hash of the operation: ${operationHash}`);
+        setDisabled(false);
     };
 
     const handleListItemClick = (event, currentToken) => {
@@ -400,6 +416,39 @@ const TradingCard = ({ isLoading }) => {
                     <Popper open={popperVisibility} anchorEl={anchor}>
                         <Box sx={{ border: 1, p: 1, bgcolor: 'background.paper' }}>{warningMessage}</Box>
                     </Popper>
+                    <Dialog open={openDialog} aria-describedby="alert-dialog-slide-description">
+                        <DialogContent>
+                            <Box sx={{ p: 1.5 }}>
+                                <Grid container direction="row" spacing={1}>
+                                    <Grid container direction="column" justifyContent="start" alignItems="stretch" spacing={0}>
+                                        <Grid item>
+                                            <Typography variant="h4" align="center" sx={0}>
+                                                Please, wait for the operation to be applied.
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item>
+                                            <FormControl sx={{ m: 2, width: '42ch' }} variant="outlined">
+                                                <LinearProgress />
+                                            </FormControl>
+                                        </Grid>
+                                        <Grid item>
+                                            <Typography variant="h4" align="center" sx={0}>
+                                                {operationMessage}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item>
+                                            <FormControl sx={{ m: 2, width: '42ch' }} variant="outlined">
+                                                <Button disableElevation onClick={closeDialog} disabled={disabled}>
+                                                    <Typography variant="h4">OK</Typography>
+                                                </Button>
+                                            </FormControl>
+                                        </Grid>
+                                    </Grid>
+                                    <Divider />
+                                </Grid>
+                            </Box>
+                        </DialogContent>
+                    </Dialog>
                 </MainCard>
             )}
         </>
