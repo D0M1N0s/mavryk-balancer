@@ -72,7 +72,7 @@ function ApproxPowFloat(base, alpha, steps = 2000) {
 }
 
 function PowFloats(a, power) {
-    const mul1 = PowFloatIntoNat(a, power / C_PRECISION);
+    const mul1 = PowFloatIntoNat(a, Math.floor(power / C_PRECISION));
     const mul2 = ApproxPowFloat(a, power % C_PRECISION);
     const res = Mul(mul1, mul2);
     return res;
