@@ -191,11 +191,11 @@ const openSaleFA12 = async (
     );
     let operationHash = null;
     if (baseAssetAddress === '') {
-        await Tezos.setWalletProvider(wallet);
-        const approveOp = await approveTransfer(standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals).send();
-        await approveOp.confirmation();
-        setDefaultProvider(adminAcc);
         try {
+            await Tezos.setWalletProvider(wallet);
+            const approveOp = await approveTransfer(standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals).send();
+            await approveOp.confirmation();
+            setDefaultProvider(adminAcc);
             const operation = await openSaleTransaction.send({ amount: totalBaseAssetAmount });
             await operation.confirmation();
             if (operation.status !== 'applied') {
@@ -204,7 +204,7 @@ const openSaleFA12 = async (
             operationHash = operation.hash;
         } catch (exp) {
             await Tezos.setWalletProvider(wallet);
-            const approveOp = await approveTransfer(standartTokenContract, tokensaleAddress, totalTokenAmount, tokenDecimals).send();
+            const approveOp = await approveTransfer(standartTokenContract, tokensaleAddress, 0, tokenDecimals).send();
             await approveOp.confirmation();
             setDefaultProvider(adminAcc);
             throw exp;
